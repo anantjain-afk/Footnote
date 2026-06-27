@@ -38,8 +38,8 @@ def build_graph() -> StateGraph:
         'finish': END,
         'generate': 'generate'
     })
+    return builder.compile()
     
-    
-    graph = builder.compile()
-    return graph 
+graph = build_graph()
+
 

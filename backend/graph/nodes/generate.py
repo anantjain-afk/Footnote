@@ -2,7 +2,7 @@ from ...services.groq import llm
 from ..state import State
 def generate(state : State) -> dict :
 
-
+    print('Generating the report..')
     prompt1 = f"""
     You are a expert research assistant. Your task is to generate a report based on the extracted text. 
     The report should be well-structured, concise, and provide a comprehensive overview of the topic.
@@ -14,16 +14,16 @@ def generate(state : State) -> dict :
     {state['extracted_text']}
     """
 
-    prompt2 = failed = ", ".join(state["failed_metrics"])
-
-    prompt = f"""
+    failed = ", ".join(state.get("failed_metrics", []))
+ 
+    prompt2 = f"""
     You previously wrote this report.
 
     Topic:
     {state["topic"]}
 
     Current report:
-    {state["report"]}
+    {state.get("report", "No report generated yet.")}
 
     The following evaluation metrics were below 0.7:
 
@@ -35,10 +35,10 @@ def generate(state : State) -> dict :
     """
 
     
-    if state['failed_metrics'].length == 0:
+    if state.get('failed_metrics') and len(state.get('failed_metrics')) == 0:
         response = llm.invoke(prompt1)
     else : 
         response  = llm.invoke(prompt2)
-  
-    return {'report': response.text}
+    print('Generated report:', response)
+    return {'report': response}
 
