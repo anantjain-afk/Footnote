@@ -1,10 +1,10 @@
 from ...services.firecrawl import firecrawl
+from ..state import State
 
-def extract_contents(url):
+def extract_contents(state: State) -> dict:
     """ Extracts the contents of the given URL and returns the text. """
-    response = firecrawl.scrape(url , formats=["markdown"])
-    print(response.markdown[:3000])
 
-if __name__ == "__main__":
-    url = "https://en.wikipedia.org/wiki/Artificial_intelligence"
-    extract_contents(url)
+
+    extracted_text = [firecrawl.scrape(url , formats=["markdown"]) for url in state['urls']]
+    return {'extracted_text': extracted_text}
+
