@@ -1,0 +1,37 @@
+# ── LangGraph / LangChain core ────────────────────────────────────────────────
+langgraph>=0.2.0
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-groq>=0.2.0          # Groq LLM integration
+
+# ── LLM providers ─────────────────────────────────────────────────────────────
+groq>=0.11.0                   # Groq Python SDK
+
+# ── Search & scraping ─────────────────────────────────────────────────────────
+tavily-python>=0.5.0           # Tavily web search
+firecrawl-py>=1.4.0            # Firecrawl content extraction
+
+# ── PDF generation ────────────────────────────────────────────────────────────
+playwright>=1.47.0             # Headless browser PDF rendering
+
+# ── Web backend (FastAPI) ──────────────────────────────────────────────────────
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9        # Form data / file uploads
+sse-starlette>=2.1.0           # Server-sent events for streaming
+
+# ── Async HTTP ────────────────────────────────────────────────────────────────
+httpx>=0.27.0
+aiofiles>=24.1.0
+
+# ── Data validation & settings ────────────────────────────────────────────────
+pydantic>=2.8.0
+pydantic-settings>=2.4.0       # .env loading via BaseSettings
+
+# ── Environment & config ──────────────────────────────────────────────────────
+python-dotenv>=1.0.0
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+tenacity>=9.0.0                # Retry logic for LLM / API calls
+tiktoken>=0.7.0                # Token counting
+rich>=13.8.0                   # Pretty terminal output / logging
