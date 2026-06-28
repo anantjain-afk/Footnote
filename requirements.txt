@@ -35,3 +35,7 @@ python-dotenv>=1.0.0
 tenacity>=9.0.0                # Retry logic for LLM / API calls
 tiktoken>=0.7.0                # Token counting
 rich>=13.8.0                   # Pretty terminal output / logging
+
+
+# observability
+langsmith>=0.1.0                   # Observability for LangGraph / LangChain

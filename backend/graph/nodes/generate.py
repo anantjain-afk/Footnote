@@ -30,12 +30,14 @@ def generate(state : State) -> dict :
     {failed}
 
     Revise the report to improve ONLY these aspects while preserving the strengths of the report.
+    and only give the revised report in markdown format. Do not include any explanations or justifications for the changes made.
+    or something like : "here is your revised report" .
 
     Return the complete revised report.
     """
 
     
-    if state.get('failed_metrics') and len(state.get('failed_metrics')) == 0:
+    if len(state.get('failed_metrics',[])) == 0:
         response = llm.invoke(prompt1)
     else : 
         response  = llm.invoke(prompt2)

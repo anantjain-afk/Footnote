@@ -11,7 +11,8 @@ class ReportRequest(BaseModel):
 def create_report(request: ReportRequest):
 
     result = graph.invoke({
-        "topic": request.topic
-    })
+        "topic": request.topic,
+        
+    }, config = {"run_name": "create_report" })
 
     return result
