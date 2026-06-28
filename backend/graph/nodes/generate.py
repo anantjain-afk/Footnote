@@ -41,6 +41,6 @@ def generate(state : State) -> dict :
         response = llm.invoke(prompt1)
     else : 
         response  = llm.invoke(prompt2)
-    print('Generated report:', response)
-    return {'report': response}
+    print('Generated report:', response.content)
+    return {'report': response.content}
 

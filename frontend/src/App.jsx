@@ -1,121 +1,97 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import LandingView from './components/LandingView'
+import LoadingView from './components/LoadingView'
+import ReportView from './components/ReportView'
+import ErrorView from './components/ErrorView'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [view, setView] = useState('landing') // 'landing' | 'loading' | 'report' | 'error'
+  const [topic, setTopic] = useState('')
+  const [reportData, setReportData] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [generatedAt, setGeneratedAt] = useState('')
+
+  const handleResearch = async (searchTopic) => {
+    setTopic(searchTopic)
+    setView('loading')
+    setErrorMsg('')
+
+    try {
+      const response = await fetch('http://localhost:8000/api/report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ topic: searchTopic }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}: ${response.statusText || 'Server Error'}`)
+      }
+
+      const data = await response.json()
+
+      if (data && data.report) {
+        const reportText = typeof data.report === 'object' && data.report !== null
+          ? (data.report.content || JSON.stringify(data.report))
+          : data.report
+        setReportData(reportText)
+        setGeneratedAt(new Date().toISOString())
+        setView('report')
+      } else {
+        throw new Error("Invalid response format. Expected JSON: { \"report\": \"...\" }")
+      }
+    } catch (err) {
+      console.error('Research error:', err)
+      setErrorMsg(err.message || 'Failed to establish connection to the research pipeline.')
+      setView('error')
+    }
+  }
+
+  const handleReset = () => {
+    setView('landing')
+    setTopic('')
+    setReportData('')
+    setErrorMsg('')
+    setGeneratedAt('')
+  }
+
+  const handleRetry = () => {
+    if (topic) {
+      handleResearch(topic)
+    } else {
+      handleReset()
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <div className="min-h-screen bg-[#030303] text-zinc-100 font-sans antialiased selection:bg-purple-500/30 selection:text-purple-200">
+      {view === 'landing' && (
+        <LandingView onSubmit={handleResearch} />
+      )}
+      
+      {view === 'loading' && (
+        <LoadingView topic={topic} />
+      )}
+      
+      {view === 'report' && (
+        <ReportView 
+          topic={topic} 
+          report={reportData} 
+          generatedAt={generatedAt} 
+          onReset={handleReset} 
+        />
+      )}
+      
+      {view === 'error' && (
+        <ErrorView 
+          topic={topic} 
+          errorMsg={errorMsg} 
+          onRetry={handleRetry} 
+          onReset={handleReset} 
+        />
+      )}
+    </div>
   )
 }
 
