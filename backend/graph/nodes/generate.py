@@ -1,17 +1,63 @@
 from ...services.groq import llm 
 from ..state import State
-def generate(state : State) -> dict :
+
+# pyrefly: ignore [missing-import]
+from langchain_core.messages import SystemMessage , HumanMessage 
+
+async def generate(state : State) -> dict :
 
     print('Generating the report..')
-    prompt1 = f"""
-    You are a expert research assistant. Your task is to generate a report based on the extracted text. 
-    The report should be well-structured, concise, and provide a comprehensive overview of the topic.
-    The report should be in markdown format and should include the following sections:
-    1. Introduction: Provide a brief introduction to the topic.
-    2. Key Findings: Summarize the key findings from the extracted text.
-    3. Conclusion: Provide a conclusion based on the key findings.
-    The report should be based on the following extracted text:
-    {state['extracted_text']}
+    system_prompt = """
+        You are a senior research analyst. You write authoritative, well-structured 
+        research reports that read like they were written by a domain expert — 
+        not by an AI summarizing web content.
+
+        Rules you must follow without exception:
+        - Never reference your source material directly. Do not say phrases like 
+        "based on the information provided", "the text suggests", "according to 
+        the content", "the extracted text", "the snippets", or any variation.
+        - Write in confident, declarative prose. State findings as facts, not 
+        observations about what the text says.
+        - Never mention that you are an AI or that you generated this report.
+        - Do not add a preamble before the report. Start directly with the title.
+        - Do not add a closing note, disclaimer, or meta-commentary after the report.
+    """
+
+    user_prompt = f"""
+        Write a comprehensive research report on the following topic: {state['topic']}
+
+        Use the research data below as your knowledge base.
+
+        ---
+        {state['extracted_text']}
+        ---
+
+        Structure the report in this exact format:
+
+        # [Report Title]
+
+        ## Executive Summary
+        2-3 sentence overview of the most important findings.
+
+        ## Introduction
+        Context and background on why this topic matters right now.
+
+        ## Key Findings
+        ### [Finding 1 Title]
+        ### [Finding 2 Title]
+        ### [Finding 3 Title]
+        (as many as the research supports)
+
+        ## Analysis
+        Synthesize the findings. Identify patterns, contradictions, or implications.
+
+        ## Conclusion
+        What this means going forward. Concrete takeaways.
+
+        ## References
+        List the key sources as bullet points (domain names or publication names only).
+
+        Write the full report now.
     """
 
     failed = ", ".join(state.get("failed_metrics", []))
@@ -38,7 +84,10 @@ def generate(state : State) -> dict :
 
     
     if len(state.get('failed_metrics',[])) == 0:
-        response = llm.invoke(prompt1)
+        response = await llm.ainvoke([
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=user_prompt)
+])
     else : 
         response  = llm.invoke(prompt2)
     print('Generated report:', response.content)
