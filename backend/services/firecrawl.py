@@ -1,9 +1,9 @@
 import os
 from dotenv import load_dotenv
 load_dotenv()
-from firecrawl import Firecrawl
+from firecrawl import AsyncFirecrawl
 
-firecrawl = Firecrawl(
+firecrawl = AsyncFirecrawl(
   api_key= os.getenv("FIRECRAWL_API_KEY")
 )
 

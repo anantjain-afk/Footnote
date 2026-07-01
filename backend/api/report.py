@@ -8,9 +8,9 @@ class ReportRequest(BaseModel):
     topic : str
 
 @router.post('/report')
-def create_report(request: ReportRequest):
+async def create_report(request: ReportRequest):
 
-    result = graph.invoke({
+    result = await graph.ainvoke({
         "topic": request.topic,
         
     }, config = {"run_name": "create_report" })
