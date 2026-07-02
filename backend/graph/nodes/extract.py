@@ -4,6 +4,18 @@ from ..state import State
 # for parallel extracting 
 import asyncio
 
+def clean_extracted(text: str) -> str:
+    # remove lines that are likely nav/footer noise
+    lines = text.split("\n")
+    cleaned = [
+        line for line in lines 
+        if len(line.strip()) > 40        # skip short nav items
+        and not line.strip().startswith("©")
+        and "cookie" not in line.lower()
+        and "subscribe" not in line.lower()
+    ]
+    return "\n".join(cleaned)
+
 
 async def extract_contents(state: State) -> dict:
     print('Extracting contents from URLs:', state['urls'])
@@ -13,8 +25,9 @@ async def extract_contents(state: State) -> dict:
     results = await asyncio.gather(*tasks, return_exceptions=True)
     
     # filter out any failed extractions
-    contents = [r.markdown[:100] for r in results if not isinstance(r, Exception)]
-    return {"extracted_text": contents}
+    contents = [r.markdown[:1000] for r in results if not isinstance(r, Exception)]
+    clenaed = [clean_extracted(content) for content in contents]
+    return {"extracted_text": clenaed}
 
     # for url in state['urls']:
     #     try:

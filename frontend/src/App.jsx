@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import LandingView from './components/LandingView'
 import LoadingView from './components/LoadingView'
-import ReportView from './components/ReportView'
+import ReportViewer from './components/ReportViewer'
 import ErrorView from './components/ErrorView'
 
 function App() {
@@ -75,7 +75,7 @@ function App() {
       )}
       
       {view === 'report' && (
-        <ReportView 
+        <ReportViewer 
           topic={topic} 
           report={reportData} 
           generatedAt={generatedAt} 

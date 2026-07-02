@@ -1,9 +1,11 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { exportReportPDF } from '../api/research'
 
-export default function ReportView({ topic, report, generatedAt, onReset }) {
+export function ReportViewer({ topic, report, generatedAt, onReset }) {
   const [copied, setCopied] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   const handleCopy = async () => {
     try {
@@ -12,6 +14,17 @@ export default function ReportView({ topic, report, generatedAt, onReset }) {
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
       console.error('Failed to copy text: ', err)
+    }
+  }
+
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      await exportReportPDF(topic, report)
+    } catch (e) {
+      console.error('Export failed:', e)
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -75,6 +88,19 @@ export default function ReportView({ topic, report, generatedAt, onReset }) {
               )}
             </button>
 
+            {/* Export PDF Button */}
+            <button
+              id="export-pdf-button"
+              onClick={handleExport}
+              disabled={exporting}
+              className="flex items-center space-x-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-900/40 disabled:text-zinc-500 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-all duration-300 shadow-[0_0_15px_rgba(79,70,229,0.2)] hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>{exporting ? 'Generating PDF...' : 'Export PDF'}</span>
+            </button>
+
             {/* Reset Button */}
             <button
               id="new-research-button"
@@ -106,3 +132,5 @@ export default function ReportView({ topic, report, generatedAt, onReset }) {
     </div>
   )
 }
+
+export default ReportViewer
