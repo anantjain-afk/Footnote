@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.database import init_db
 from .api.sessions import router as sessions_router
+from .api.chat import router as chat_router
 app = FastAPI()
 
 
@@ -18,6 +19,7 @@ app.add_middleware(
 def startup():
     init_db()
 
+app.include_router(chat_router , prefix = '/api') 
 app.include_router(sessions_router , prefix="/api")
 app.include_router(report_router, prefix="/api")
 

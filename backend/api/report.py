@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from ..graph.builder import graph
+from ..graph.research.builder import graph
 import uuid
 from fastapi.responses import FileResponse
 from ..services.pdf.renderer import generate_pdf

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from ..core.database import get_db
-from ..graph.builder import build_graph
+from ..graph.research.builder import build_graph
 
 router = APIRouter(prefix="/sessions")
 

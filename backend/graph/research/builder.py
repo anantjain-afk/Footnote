@@ -2,7 +2,7 @@ from asyncio import graph
 
 from langgraph.graph import StateGraph , START, END 
 
-from ..services.groq import llm
+from ...services.groq import llm
 from .nodes.search import search
 from .nodes.extract import extract_contents
 from .nodes.generate import generate

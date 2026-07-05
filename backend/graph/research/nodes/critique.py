@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from ...services.groq import llm
+from ....services.groq import llm
 from ..state import State
 
 class Judge1Scores(BaseModel):

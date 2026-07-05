@@ -1,4 +1,4 @@
-from ...services.firecrawl import firecrawl
+from ....services.firecrawl import firecrawl
 from firecrawl.v2.utils.error_handler import WebsiteNotSupportedError
 from ..state import State
 # for parallel extracting 

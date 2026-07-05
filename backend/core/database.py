@@ -1,8 +1,12 @@
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
+import os 
 
-DB_PATH = "backend/research_agent.db"
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "research_agent.db")
+
 
 def get_connection():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -26,6 +30,7 @@ def get_db():
 def init_db():
     with get_db() as conn:
         conn.executescript("""
+            -- existing tables ...
             CREATE TABLE IF NOT EXISTS research_sessions (
                 id           TEXT PRIMARY KEY,
                 topic        TEXT NOT NULL,
@@ -42,10 +47,20 @@ def init_db():
                 created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
             );
 
+            -- NEW
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id          TEXT PRIMARY KEY,
+                session_id  TEXT NOT NULL REFERENCES research_sessions(id),
+                role        TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
+                content     TEXT NOT NULL,
+                created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+
             CREATE INDEX IF NOT EXISTS idx_sessions_created
                 ON research_sessions(created_at DESC);
-
             CREATE INDEX IF NOT EXISTS idx_reports_session
                 ON reports(session_id);
+            CREATE INDEX IF NOT EXISTS idx_chat_session
+                ON chat_messages(session_id, created_at ASC);
         """)
     print("✅ Database initialized")

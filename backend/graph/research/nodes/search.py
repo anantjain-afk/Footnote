@@ -1,6 +1,6 @@
 
 from ..state import State
-from ...services.tavily import tavilyClient 
+from ....services.tavily import tavilyClient 
 
 def search(state : State) -> dict:
     print('Searching for topic:', state['topic'])
