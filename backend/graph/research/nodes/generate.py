@@ -56,7 +56,9 @@ async def generate(state : State) -> dict :
 
         ## References
         List the key sources as bullet points (domain names or publication names only).
-
+        use the following as the urls: {state['urls']}
+        and provide the urls of the sources in the references section.
+        like user should be able to click on the bullet point and then they should be able to go to the original url from which the information was extracted.
         Write the full report now.
     """
 

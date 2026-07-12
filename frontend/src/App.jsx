@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import LandingView from './components/LandingView'
 import LoadingView from './components/LoadingView'
-import ReportViewer from './components/ReportViewer'
+import ReportChatView from './components/ReportChatView'
 import ErrorView from './components/ErrorView'
 import { Sidebar } from './components/Sidebar'
 import { useSessionHistory } from './hooks/useSessionHistory'
@@ -165,9 +165,10 @@ function App() {
         )}
         
         {view === 'report' && (
-          <ReportViewer 
+          <ReportChatView 
+            sessionId={activeSessionId}
             topic={topic} 
-            report={reportData} 
+            initialReport={reportData} 
             generatedAt={generatedAt} 
             onReset={handleReset} 
           />

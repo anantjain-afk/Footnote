@@ -1,0 +1,77 @@
+import { useEffect, useRef } from 'react'
+import MessageBubble from './MessageBubble'
+import ChatInput from './ChatInput'
+import { X, Sparkles } from 'lucide-react'
+
+export function ChatPanel({
+  messages,
+  inputValue,
+  onInputChange,
+  onSend,
+  isLoading,
+  onCloseChat
+}) {
+  const messagesEndRef = useRef(null)
+
+  // Auto scroll to latest message when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  return (
+    <div className="h-full flex flex-col bg-[#111111] border-l border-[#2a2a2a] relative">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-[#111111]/90 backdrop-blur-md border-b border-[#2a2a2a]">
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-400">
+            <Sparkles className="w-4 h-4 animate-pulse-slow" />
+          </div>
+          <span className="text-sm font-bold text-white font-sans">
+            Research Assistant
+          </span>
+        </div>
+
+        {/* Close Chat button */}
+        <button
+          onClick={onCloseChat}
+          className="flex items-center justify-center w-7 h-7 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all duration-200 cursor-pointer"
+          title="Close Chat"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Messages list container */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth">
+        {messages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center px-6">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-center text-indigo-400 mb-3">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <p className="text-zinc-400 text-xs font-mono">
+              Ask a question about the report or request updates.
+            </p>
+          </div>
+        ) : (
+          messages.map((msg, index) => (
+            <MessageBubble key={index} message={msg} />
+          ))
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input area fixed to the bottom */}
+      <div className="p-4 border-t border-[#2a2a2a] bg-[#111111] pb-6">
+        <ChatInput
+          value={inputValue}
+          onChange={onInputChange}
+          onSubmit={onSend}
+          isLoading={isLoading}
+          placeholder="Ask a question or edit report..."
+        />
+      </div>
+    </div>
+  )
+}
+
+export default ChatPanel

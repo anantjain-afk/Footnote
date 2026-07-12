@@ -13,6 +13,7 @@ firecrawl-py>=1.4.0            # Firecrawl content extraction
 
 # ── PDF generation ────────────────────────────────────────────────────────────
 playwright>=1.47.0             # Headless browser PDF rendering
+markdown>=3.6.0                # Markdown conversion to HTML
 
 # ── Web backend (FastAPI) ──────────────────────────────────────────────────────
 fastapi>=0.115.0
