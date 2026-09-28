@@ -5,6 +5,8 @@ import { X, Sparkles } from 'lucide-react'
 
 export function ChatPanel({
   messages,
+  streamingMessage,
+  isStreaming,
   inputValue,
   onInputChange,
   onSend,
@@ -43,7 +45,7 @@ export function ChatPanel({
 
       {/* Messages list container */}
       <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth">
-        {messages.length === 0 ? (
+        {messages.length === 0 && !isStreaming ? (
           <div className="h-full flex flex-col items-center justify-center text-center px-6">
             <div className="w-12 h-12 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-center text-indigo-400 mb-3">
               <Sparkles className="w-5 h-5" />
@@ -53,9 +55,14 @@ export function ChatPanel({
             </p>
           </div>
         ) : (
-          messages.map((msg, index) => (
-            <MessageBubble key={index} message={msg} />
-          ))
+          <>
+            {messages.map((msg, index) => (
+              <MessageBubble key={index} message={msg} />
+            ))}
+            {isStreaming && streamingMessage && (
+              <MessageBubble message={{ role: "assistant", content: streamingMessage }} />
+            )}
+          </>
         )}
         <div ref={messagesEndRef} />
       </div>

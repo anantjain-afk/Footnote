@@ -1,56 +1,83 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 
-export default function LoadingView({ topic }) {
+export default function LoadingView({ topic, currentNode, scores, events, iterations }) {
   const steps = [
     {
-      id: 1,
+      id: 'search',
       title: "Searching the web",
-      description: "Gathering source articles and reference data using Tavily Search API",
+      defaultDesc: "Gathering source articles and reference data using Tavily Search API",
       provider: "Tavily"
     },
     {
-      id: 2,
+      id: 'extract_contents',
       title: "Extracting content",
-      description: "Scraping page contents, filtering fluff, and cleaning raw texts via Firecrawl",
+      defaultDesc: "Scraping page contents, filtering fluff, and cleaning raw texts via Firecrawl",
       provider: "Firecrawl"
     },
     {
-      id: 3,
+      id: 'generate',
       title: "Generating report",
-      description: "Synthesizing arguments, drafting detailed markdown sections using Groq LLM",
+      defaultDesc: "Synthesizing arguments, drafting detailed markdown sections using Groq LLM",
       provider: "Groq LLM"
     },
     {
-      id: 4,
+      id: 'critique',
       title: "Reviewing quality",
-      description: "Verifying formatting, fact-checking, and refining report criteria using Judge LLM",
+      defaultDesc: "Verifying formatting, fact-checking, and refining report criteria using Judge LLM",
       provider: "Judge LLM"
     }
   ]
 
-  const [activeStepIndex, setActiveStepIndex] = useState(0)
+  // Map backend node names to step indices
+  const getStepIndex = () => {
+    if (!currentNode) return 0;
+    if (currentNode === 'search') return 0;
+    if (currentNode === 'extract_contents') return 1;
+    if (currentNode === 'generate') return 2;
+    if (currentNode === 'judge_1' || currentNode === 'judge_2' || currentNode === 'route') return 3;
+    return 3;
+  }
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveStepIndex((prevIndex) => {
-        if (prevIndex < steps.length - 1) {
-          return prevIndex + 1
-        }
-        return prevIndex // Stay at last step until backend response updates view
-      })
-    }, 4500) // 4.5 seconds per step
+  const activeStepIndex = getStepIndex();
 
-    return () => clearInterval(interval)
-  }, [steps.length])
+  const getDescription = (stepId) => {
+    if (stepId === 'search') {
+      const searchEndEvent = events?.slice().reverse().find(e => e.type === 'end' && e.node === 'search');
+      if (searchEndEvent) return `Found ${searchEndEvent.details?.urls?.length || 0} URLs`;
+      if (currentNode === 'search') return 'Querying Tavily search API...';
+      return steps[0].defaultDesc;
+    }
+    if (stepId === 'extract_contents') {
+      const extractEndEvent = events?.slice().reverse().find(e => e.type === 'end' && e.node === 'extract_contents');
+      if (extractEndEvent) return `Extracted ${extractEndEvent.details?.extracted_count || 0} pages`;
+      if (currentNode === 'extract_contents') return 'Scraping page contents...';
+      return steps[1].defaultDesc;
+    }
+    if (stepId === 'generate') {
+      if (currentNode === 'generate') return iterations > 0 ? `Revising report (Iteration ${iterations})...` : 'Drafting sections...';
+      if (iterations > 0) return `Drafted report after ${iterations} iterations`;
+      return steps[2].defaultDesc;
+    }
+    if (stepId === 'critique') {
+      if (scores && Object.keys(scores).length > 0) {
+        const parts = [];
+        if (scores.judge_1) parts.push(`Rel: ${scores.judge_1.relevance?.toFixed(2)} Dep: ${scores.judge_1.depth?.toFixed(2)}`);
+        if (scores.judge_2) parts.push(`Cla: ${scores.judge_2.clarity?.toFixed(2)} Fmt: ${scores.judge_2.format?.toFixed(2)}`);
+        return parts.length > 0 ? parts.join(' | ') : steps[3].defaultDesc;
+      }
+      if (currentNode === 'judge_1' || currentNode === 'judge_2') return 'Evaluating quality...';
+      if (currentNode === 'route') return 'Checking metrics...';
+      return steps[3].defaultDesc;
+    }
+    return "";
+  };
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center px-4 relative bg-[#030303]">
-      {/* Background ambient glows */}
       <div className="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-purple-900/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/3 right-1/3 w-[450px] h-[450px] bg-blue-900/10 rounded-full blur-[110px] pointer-events-none" />
 
       <div className="w-full max-w-xl z-10 space-y-10 animate-fade-in">
-        {/* Header / Subtitle */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center space-x-2">
             <span className="relative flex h-3 w-3">
@@ -69,11 +96,8 @@ export default function LoadingView({ topic }) {
           </div>
         </div>
 
-        {/* Vertical Stepper Container */}
         <div className="relative glass-panel rounded-2xl p-6 md:p-8 space-y-8 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-          {/* Vertical Connecting Line */}
           <div className="absolute left-[37px] top-[40px] bottom-[40px] w-0.5 bg-zinc-800 pointer-events-none">
-            {/* Colored Active Line Overlay */}
             <div
               className="w-full bg-gradient-to-b from-purple-500 via-blue-500 to-emerald-500 transition-all duration-1000 ease-out"
               style={{
@@ -82,7 +106,6 @@ export default function LoadingView({ topic }) {
             />
           </div>
 
-          {/* Stepper Items */}
           {steps.map((step, idx) => {
             const isCompleted = idx < activeStepIndex
             const isActive = idx === activeStepIndex
@@ -95,7 +118,6 @@ export default function LoadingView({ topic }) {
                   isActive ? 'opacity-100 scale-[1.01]' : isPending ? 'opacity-35' : 'opacity-85'
                 }`}
               >
-                {/* Step Indicator Dot / Icon */}
                 <div className="relative z-10 flex items-center justify-center">
                   {isCompleted ? (
                     <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all duration-300">
@@ -117,7 +139,6 @@ export default function LoadingView({ topic }) {
                   )}
                 </div>
 
-                {/* Step Metadata & Labels */}
                 <div className="flex-1 space-y-1">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h3 className={`font-semibold text-base ${isActive ? 'text-purple-400' : 'text-zinc-200'}`}>
@@ -134,7 +155,7 @@ export default function LoadingView({ topic }) {
                     </span>
                   </div>
                   <p className="text-zinc-400 text-sm leading-relaxed">
-                    {step.description}
+                    {getDescription(step.id)}
                   </p>
                 </div>
               </div>
@@ -142,7 +163,6 @@ export default function LoadingView({ topic }) {
           })}
         </div>
 
-        {/* Global Loading Status Text */}
         <p className="text-center font-mono text-xs text-zinc-500 animate-pulse">
           Retrieving web intelligence and synthesizing report. Please stand by...
         </p>
@@ -150,3 +170,4 @@ export default function LoadingView({ topic }) {
     </div>
   )
 }
+

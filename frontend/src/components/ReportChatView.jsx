@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import ReportPanel from './ReportPanel'
 import ChatPanel from './ChatPanel'
 import ChatInput from './ChatInput'
-import { getChatHistory, postChatMessage } from '../api/chat'
+import { getChatHistory } from '../api/chat'
 import { exportReportPDF } from '../api/research'
+import { useChatStream } from '../hooks/useChatStream'
 
 export function ReportChatView({
   sessionId,
@@ -20,6 +21,8 @@ export function ReportChatView({
   const [isUpdatingReport, setIsUpdatingReport] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [showToast, setShowToast] = useState(false)
+
+  const { streamingMessage, isStreaming, send: sendChatStream } = useChatStream(sessionId)
 
   // Sync report when initialReport changes (e.g. user selects a different session)
   useEffect(() => {
@@ -78,35 +81,27 @@ export function ReportChatView({
     setIsLoading(true)
     if (mightBeImproveIntent(messageText)) setIsUpdatingReport(true)
 
-    try {
-      // 4. POST to backend
-      const data = await postChatMessage(sessionId, messageText)
-
-      // 5. add assistant response to chat
+    // 4. Start streaming chat
+    sendChatStream(messageText, ({ intent, updated_report, finalMessage }) => {
+      // 5. Stream complete, commit to messages array
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: data.response,
-        intent: data.intent // store intent on message for badge
+        content: finalMessage || "I encountered an error or received no response.",
+        intent: intent
       }])
 
       // 6. if IMPROVE, update report panel
-      if (data.intent === "IMPROVE" && data.updated_report) {
-        setReport(data.updated_report)
+      if (intent === "IMPROVE" && updated_report) {
+        setReport(updated_report)
         // Show success toast for 2 seconds
         setShowToast(true)
         setTimeout(() => setShowToast(false), 2000)
       }
-    } catch (err) {
-      console.error("Failed to process chat message:", err)
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: "I encountered an error trying to process your request. Please try again."
-      }])
-    } finally {
+
       // 7. clear loading states
       setIsLoading(false)
       setIsUpdatingReport(false)
-    }
+    })
   }
 
   const handleExportPdf = async () => {
@@ -147,10 +142,12 @@ export function ReportChatView({
           <div className="w-[40%] h-full">
             <ChatPanel
               messages={messages}
+              streamingMessage={streamingMessage}
+              isStreaming={isStreaming}
               inputValue={inputValue}
               onInputChange={setInputValue}
               onSend={() => handleSend(inputValue)}
-              isLoading={isLoading}
+              isLoading={isLoading || isStreaming}
               onCloseChat={() => setIsChatOpen(false)}
             />
           </div>

@@ -7,7 +7,7 @@ export async function createSession(topic) {
     body: JSON.stringify({ topic }),
   });
   if (!res.ok) throw new Error("Failed to create session");
-  return res.json(); // { session_id, report }
+  return res.json(); // { session_id }
 }
 
 export async function listSessions() {
