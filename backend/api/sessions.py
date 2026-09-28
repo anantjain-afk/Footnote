@@ -28,7 +28,7 @@ async def run_research_pipeline(session_id: str, topic: str):
             kind = event["event"]
             name = event["name"]
 
-            if kind == "on_chain_start" and name in ["search", "extract_contents", "generate", "judge_1", "judge_2"]:
+            if kind == "on_chain_start" and name in ["search", "extract_contents", "generate", "judge"]:
                 await publish_event(session_id, "node_start", {"node": name})
 
             elif kind == "on_chain_end":
@@ -39,9 +39,9 @@ async def run_research_pipeline(session_id: str, topic: str):
                     output = event["data"].get("output", {})
                     extracted_count = len(output.get("extracted_text", [])) if output else 0
                     await publish_event(session_id, "node_end", {"node": name, "data": {"extracted_count": extracted_count}})
-                elif name in ["judge_1", "judge_2"]:
+                elif name == "judge":
                     output = event["data"].get("output", {})
-                    await publish_event(session_id, "scores", {"node": name, "data": output})
+                    await publish_event(session_id, "scores", {"node": name, "data": output.get("scores", {})})
                 elif name == "route":
                     output = event["data"].get("output", {})
                     await publish_event(session_id, "progress", {"node": name, "data": output})

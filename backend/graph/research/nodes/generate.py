@@ -117,7 +117,10 @@ async def generate(state: State) -> dict:
         Return the complete revised report in markdown format only.
         """
 
-        messages = [HumanMessage(content=revision_prompt)]
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=revision_prompt),
+        ]
 
     try:
         response = await _invoke_llm(messages)

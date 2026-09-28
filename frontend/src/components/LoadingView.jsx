@@ -28,13 +28,12 @@ export default function LoadingView({ topic, currentNode, scores, events, iterat
     }
   ]
 
-  // Map backend node names to step indices
   const getStepIndex = () => {
     if (!currentNode) return 0;
     if (currentNode === 'search') return 0;
     if (currentNode === 'extract_contents') return 1;
     if (currentNode === 'generate') return 2;
-    if (currentNode === 'judge_1' || currentNode === 'judge_2' || currentNode === 'route') return 3;
+    if (currentNode === 'judge' || currentNode === 'route') return 3;
     return 3;
   }
 
@@ -59,13 +58,11 @@ export default function LoadingView({ topic, currentNode, scores, events, iterat
       return steps[2].defaultDesc;
     }
     if (stepId === 'critique') {
-      if (scores && Object.keys(scores).length > 0) {
-        const parts = [];
-        if (scores.judge_1) parts.push(`Rel: ${scores.judge_1.relevance?.toFixed(2)} Dep: ${scores.judge_1.depth?.toFixed(2)}`);
-        if (scores.judge_2) parts.push(`Cla: ${scores.judge_2.clarity?.toFixed(2)} Fmt: ${scores.judge_2.format?.toFixed(2)}`);
-        return parts.length > 0 ? parts.join(' | ') : steps[3].defaultDesc;
+      if (scores && scores.judge) {
+        const s = scores.judge;
+        return `Rel: ${s.relevance?.toFixed(1)} | Dep: ${s.depth?.toFixed(1)} | Cla: ${s.clarity?.toFixed(1)} | Lng: ${s.language?.toFixed(1)} | Fmt: ${s.format?.toFixed(1)}`;
       }
-      if (currentNode === 'judge_1' || currentNode === 'judge_2') return 'Evaluating quality...';
+      if (currentNode === 'judge') return 'Evaluating quality...';
       if (currentNode === 'route') return 'Checking metrics...';
       return steps[3].defaultDesc;
     }

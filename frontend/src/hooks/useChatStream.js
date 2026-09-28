@@ -28,24 +28,34 @@ export function useChatStream(sessionId) {
 
       while (true) {
         const { value, done } = await reader.read();
-        if (done) break;
         
-        buffer += decoder.decode(value, { stream: true });
+        if (value) {
+          buffer += decoder.decode(value, { stream: true });
+        }
         
-        // Process complete events
-        const parts = buffer.split('\n\n');
+        // Process complete events separated by double newlines
+        const parts = buffer.split(/\r?\n\r?\n/);
+        // The last part is either incomplete or empty, keep it in buffer
         buffer = parts.pop() || '';
         
+        // If the stream is done, also process whatever is left in the buffer
+        if (done && buffer.trim()) {
+          parts.push(buffer);
+          buffer = '';
+        }
+        
         for (const part of parts) {
-          const lines = part.split('\n');
+          if (!part.trim()) continue;
+          
+          const lines = part.split(/\r?\n/);
           let eventType = 'message';
           let dataStr = '';
           
           for (const line of lines) {
-            if (line.startsWith('event: ')) {
-              eventType = line.slice(7).trim();
-            } else if (line.startsWith('data: ')) {
-              dataStr = line.slice(6).trim();
+            if (line.startsWith('event:')) {
+              eventType = line.slice(6).trim();
+            } else if (line.startsWith('data:')) {
+              dataStr = line.slice(5).trim();
             }
           }
           
@@ -62,10 +72,12 @@ export function useChatStream(sessionId) {
                 console.error("Chat error:", data.detail);
               }
             } catch (e) {
-              console.error("Failed to parse SSE data", e);
+              console.error("Failed to parse SSE data", e, "Raw data:", dataStr);
             }
           }
         }
+        
+        if (done) break;
       }
       
       if (onComplete) {
