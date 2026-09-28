@@ -1,11 +1,12 @@
+
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
-from langchain_groq import ChatGroq
+from ....services import groq 
 from ..state import ChatState
 import os 
 from dotenv import load_dotenv 
 load_dotenv()
 
-llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=os.getenv('GROQ_API_KEY'))
+llm = groq.llm
 
 async def improve_report(state: ChatState) -> dict:
     current_message = state["messages"][-1].content

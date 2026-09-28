@@ -1,11 +1,4 @@
-import os
-from dotenv import load_dotenv
-load_dotenv()
 from firecrawl import AsyncFirecrawl
+from ..core.config import settings
 
-firecrawl = AsyncFirecrawl(
-  api_key= os.getenv("FIRECRAWL_API_KEY")
-)
-
-
-
+firecrawl = AsyncFirecrawl(api_key=settings.firecrawl_api_key)

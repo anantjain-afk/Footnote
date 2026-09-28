@@ -1,10 +1,11 @@
-from langchain_groq import ChatGroq
+
+from ....services import groq
 from langchain_core.messages import SystemMessage
 from ..state import ChatState
 import os 
 from dotenv import load_dotenv 
 load_dotenv()
-llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=os.getenv('GROQ_API_KEY'))
+llm = groq.llm
 
 async def chat_response(state: ChatState) -> dict:
     system = SystemMessage(content=f"""You are a research assistant helping the user 

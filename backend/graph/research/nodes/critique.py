@@ -1,35 +1,51 @@
+import time
 from pydantic import BaseModel, Field
-
 from ....services.groq import llm
+from ....core.logging import get_logger
+from ....core.config import settings
 from ..state import State
+
+logger = get_logger(__name__)
+
+
+# ── Judge 1: Relevance + Depth ────────────────────────────────────────────────
 
 class Judge1Scores(BaseModel):
     relevance: float = Field(ge=0, le=1)
     depth: float = Field(ge=0, le=1)
 
-def judge_1(state : State) -> dict :
-    print('judgin on the basis of relevance and depth of analysis')
+
+async def judge_1(state: State) -> dict:
+    """Evaluate report quality on relevance and depth of analysis."""
+    start = time.time()
+
     prompt = f"""
-    You are a expert on evaluating the quality of research reports. 
-    Your task is the evaluate the quality of the report based on relevance to the topic, clarity ,
-    depth of the analysis. 
+    You are an expert on evaluating the quality of research reports. 
+    Your task is to evaluate the quality of the report based on relevance to the topic 
+    and depth of the analysis.
     
-    The report should be evaluated based on the following criteria:
+    Criteria:
     1. Relevance: How well does the report address the topic?
     2. Depth of Analysis: Does the report provide a thorough analysis of the topic?
 
-
-    provide a score between 0 and 1 for each criteria, where 0 is the worst and 1 is the best.
-    here is the topic  : {state.get('topic')}
-    here is the report {state.get('report', 'No report generated yet.')}
+    Provide a score between 0 and 1 for each criterion, where 0 is the worst and 1 is the best.
+    Topic: {state.get('topic')}
+    Report: {state.get('report', 'No report generated yet.')}
     Return ONLY the structured output.
     """
 
-    judge_llm = llm.with_structured_output(Judge1Scores)
-    result = judge_llm.invoke(prompt)
-    print('Judge 1 scores:', result.model_dump())
-    return {'judge_1_scores': result.model_dump()}
+    judge_llm = llm.with_structured_output(Judge1Scores, method="json_schema")
+    result = await judge_llm.ainvoke(prompt)
+    duration = round((time.time() - start) * 1000)
 
+    logger.info(
+        f"Judge 1 scores: {result.model_dump()}",
+        extra={"node": "judge_1", "scores": result.model_dump(), "duration_ms": duration},
+    )
+    return {"judge_1_scores": result.model_dump()}
+
+
+# ── Judge 2: Clarity + Language + Format ──────────────────────────────────────
 
 class Judge2Scores(BaseModel):
     clarity: float = Field(ge=0, le=1)
@@ -37,34 +53,41 @@ class Judge2Scores(BaseModel):
     format: float = Field(ge=0, le=1)
 
 
-def judge_2(state : State) -> dict :
-    print('judging on the basis of clarity, language and format')
+async def judge_2(state: State) -> dict:
+    """Evaluate report quality on clarity, language, and format."""
+    start = time.time()
+
     prompt = f"""
-    You are a expert on evaluating the quality of research reports. 
-    Your task is the evaluate the quality of the report based on clarity, language, and format. 
+    You are an expert on evaluating the quality of research reports. 
+    Your task is to evaluate the quality of the report based on clarity, language, 
+    and format.
     
-    The report should be evaluated based on the following criteria:
+    Criteria:
     1. Clarity: Is the report clear and easy to understand?
-    2. Language: Is the language used in the report appropriate and professional?
+    2. Language: Is the language used appropriate and professional?
     3. Format: Is the report well-structured and formatted correctly?
 
-    provide a score between 0 and 1 for each criteria, where 0 is the worst and 1 is the best.
-    here is the topic  : {state.get('topic')}
-    here is the report {state.get('report', 'No report generated yet.')}
+    Provide a score between 0 and 1 for each criterion, where 0 is the worst and 1 is the best.
+    Topic: {state.get('topic')}
+    Report: {state.get('report', 'No report generated yet.')}
     Return ONLY the structured output.
     """
 
-    judge_llm = llm.with_structured_output(Judge2Scores)
+    judge_llm = llm.with_structured_output(Judge2Scores, method="json_schema")
+    result = await judge_llm.ainvoke(prompt)
+    duration = round((time.time() - start) * 1000)
 
-    result = judge_llm.invoke(prompt)
-    print('Judge 2 scores:', result.model_dump())
-    return {'judge_2_scores': result.model_dump()}
+    logger.info(
+        f"Judge 2 scores: {result.model_dump()}",
+        extra={"node": "judge_2", "scores": result.model_dump(), "duration_ms": duration},
+    )
+    return {"judge_2_scores": result.model_dump()}
 
 
+# ── Route: Aggregate scores and decide ────────────────────────────────────────
 
 def route(state: State):
-    print('Routing based on scores and iterations')
-    THRESHOLD = 0.7
+    """Aggregate judge scores, identify failed metrics, and increment iteration."""
     scores = {
         **state.get("judge_1_scores", {}),
         **state.get("judge_2_scores", {}),
@@ -72,12 +95,21 @@ def route(state: State):
     failed = [
         metric
         for metric, score in scores.items()
-        if score < THRESHOLD
+        if score < settings.judge_threshold
     ]
-    print('Failed metrics:', failed)
+
+    iteration = state.get("iterations", 0) + 1
+
+    logger.info(
+        f"Route: iteration={iteration}, failed={failed}, scores={scores}",
+        extra={
+            "node": "route",
+            "scores": scores,
+        },
+    )
 
     return {
         "scores": scores,
         "failed_metrics": failed,
-        "iterations": state.get("iterations", 0) + 1,
+        "iterations": iteration,
     }

@@ -1,14 +1,15 @@
-from langchain_groq import ChatGroq
+
 from langchain_core.messages import SystemMessage, HumanMessage
 from ..state import ChatState
 import os 
 from dotenv import load_dotenv 
 from pydantic import BaseModel, Field
+from ....services import groq 
 
 load_dotenv()
 
 # We use the fast 8b model with structured output, which guarantees accurate classifications.
-llm = ChatGroq(model="llama-3.1-8b-instant", api_key=os.getenv('GROQ_API_KEY'))
+llm = groq.llm
 
 class IntentClassification(BaseModel):
     intent: str = Field(description="The classified intent, must be either 'CHAT' or 'IMPROVE'")

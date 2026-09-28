@@ -1,15 +1,13 @@
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime
-import os 
+from .config import settings
+from .logging import get_logger
 
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, "research_agent.db")
+logger = get_logger(__name__)
 
 
 def get_connection():
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    conn = sqlite3.connect(settings.db_path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
@@ -47,7 +45,6 @@ def init_db():
                 created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
             );
 
-            -- NEW
             CREATE TABLE IF NOT EXISTS chat_messages (
                 id          TEXT PRIMARY KEY,
                 session_id  TEXT NOT NULL REFERENCES research_sessions(id),
@@ -63,4 +60,4 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_chat_session
                 ON chat_messages(session_id, created_at ASC);
         """)
-    print("✅ Database initialized")
+    logger.info("Database initialized", extra={"node": "startup"})

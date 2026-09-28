@@ -1,0 +1,60 @@
+"""
+Centralised application settings.
+
+All configuration lives here.  Every module imports `settings` from this
+module instead of calling ``os.getenv()`` directly.  Pydantic Settings
+validates at import-time so the app fails fast on missing keys.
+"""
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from functools import lru_cache
+from pathlib import Path
+
+
+class Settings(BaseSettings):
+    """Application settings loaded from environment / .env file."""
+
+    model_config = SettingsConfigDict(
+        env_file=str(Path(__file__).resolve().parent.parent / ".env"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    # ── LLM ───────────────────────────────────────────────────────────────
+    groq_api_key: str
+    groq_model: str = "openai/gpt-oss-20b"
+    groq_temperature: float = 0.1
+
+    # ── Search & Scraping ─────────────────────────────────────────────────
+    tavily_api_key: str
+    firecrawl_api_key: str
+
+    # ── Observability ─────────────────────────────────────────────────────
+    langchain_tracing_v2: bool = False
+    langchain_api_key: str = ""
+    langchain_project: str = "research-agent"
+
+    # ── App ────────────────────────────────────────────────────────────────
+    app_name: str = "Research Agent API"
+    app_version: str = "1.0.0"
+    debug: bool = False
+    cors_origins: list[str] = ["http://localhost:5173"]
+
+    # ── Database ──────────────────────────────────────────────────────────
+    db_path: str = str(
+        Path(__file__).resolve().parent.parent / "research_agent.db"
+    )
+
+    # ── Research pipeline tunables ────────────────────────────────────────
+    max_iterations: int = 3
+    judge_threshold: float = 0.7
+    extract_max_chars: int = 3000
+
+
+@lru_cache()
+def get_settings() -> Settings:
+    """Return a cached singleton of the application settings."""
+    return Settings()  # type: ignore[call-arg]
+
+
+settings = get_settings()
