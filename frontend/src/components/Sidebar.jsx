@@ -1,5 +1,5 @@
 import React from "react";
-import { Trash2, FileText, Loader2, Plus, Sparkles } from "lucide-react";
+import { Trash2, Loader2, Plus, Sparkles, PanelLeft, PanelLeftClose, SquarePen } from "lucide-react";
 
 // Removed StatusBadge component per user request
 
@@ -23,6 +23,8 @@ function formatDate(dateStr) {
 }
 
 export function Sidebar({
+  isOpen,
+  onToggle,
   sessions,
   loading,
   activeSessionId,
@@ -40,38 +42,63 @@ export function Sidebar({
   };
 
   return (
-    <aside className="w-68 h-screen bg-[#f9f9f9] border-r border-black/5 flex flex-col flex-shrink-0 z-20 relative text-black font-sans">
-      {/* Grainy effect overlay */}
+    <>
+      {/* Floating buttons when sidebar is closed */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-[0.02] mix-blend-multiply z-0"
-        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}
-      ></div>
-
-      {/* Header */}
-      <div className="pt-6 pb-4 px-5 flex items-center justify-between relative z-10">
-        <div className="flex items-center gap-2.5">
-          <Sparkles size={18} className="text-black" />
-          <h2 className="text-[15px] font-bold tracking-wide text-black">
-            ResearchAI
-          </h2>
-        </div>
-      </div>
-
-      {/* Action / New Research Button */}
-      <div className="px-3 pb-6 relative z-10">
+        className={`fixed top-3 left-3 z-50 flex flex-col gap-2 transition-all duration-300 ${
+          isOpen ? 'opacity-0 pointer-events-none -translate-x-4' : 'opacity-100 pointer-events-auto translate-x-0'
+        }`}
+      >
+        <button
+          onClick={onToggle}
+          className="p-2 bg-transparent hover:bg-black/5 rounded-lg text-black/70 hover:text-black transition-all cursor-pointer"
+          title="Open Sidebar"
+        >
+          <PanelLeft size={22} />
+        </button>
         <button
           onClick={onNewResearch}
-          className="w-full py-2.5 px-3 rounded-xl border border-black bg-yellow-400 hover:bg-amber-400 text-[14px] font-medium text-black transition-all duration-200 flex items-center gap-3 cursor-pointer"
+          className="p-2 bg-transparent hover:bg-black/5 rounded-lg text-black/70 hover:text-black transition-all cursor-pointer"
+          title="New Research"
         >
-          <Plus size={16} className="text-black" />
-          New Research
+          <SquarePen size={22} />
         </button>
       </div>
 
-      {/* Title Subheader */}
-      <div className="px-5 pb-2 text-[12px] font-medium text-black/40 uppercase tracking-wider relative z-10">
-        Recent History
-      </div>
+      <aside 
+        className={`h-screen bg-[#f9f9f9] border-r border-black/5 flex flex-col flex-shrink-0 z-40 relative text-black font-sans transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isOpen ? 'w-68 translate-x-0 opacity-100' : 'w-0 -translate-x-full opacity-0 overflow-hidden border-r-0'
+        }`}
+      >
+        {/* Grainy effect overlay */}
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-[0.02] mix-blend-multiply z-0"
+          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}
+        ></div>
+
+        <div className="flex-1 w-68 flex flex-col overflow-hidden min-w-[272px]">
+          {/* Header */}
+          <div className="pt-3 pb-4 px-3 flex items-center justify-between relative z-10">
+            <button
+              onClick={onToggle}
+              className="p-2 hover:bg-black/5 rounded-lg text-black/70 hover:text-black transition-colors cursor-pointer"
+              title="Close Sidebar"
+            >
+              <PanelLeftClose size={22} />
+            </button>
+            <button
+              onClick={onNewResearch}
+              className="p-2 hover:bg-black/5 rounded-lg text-black/70 hover:text-black transition-colors cursor-pointer"
+              title="New Research"
+            >
+              <SquarePen size={22} />
+            </button>
+          </div>
+
+          {/* Title Subheader */}
+          <div className="px-5 pb-2 text-[12px] font-medium text-black/40 uppercase tracking-wider relative z-10">
+            Recent History
+          </div>
 
       {/* Scrollable list */}
       <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-1 relative z-10">
@@ -116,6 +143,8 @@ export function Sidebar({
           ))
         )}
       </div>
-    </aside>
+        </div>
+      </aside>
+    </>
   );
 }

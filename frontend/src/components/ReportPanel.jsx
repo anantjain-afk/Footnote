@@ -83,15 +83,6 @@ export function ReportPanel({
         className={`sticky top-0 z-20 flex items-center justify-between py-4 border-b border-black/10 bg-white/90 backdrop-blur-md px-6 -mx-6 mb-6`}
       >
         <div className="flex items-center gap-4 min-w-0 pr-4">
-          {!isSidebarOpen && (
-            <button
-              onClick={onToggleSidebar}
-              className="p-2 -ml-2 rounded-md hover:bg-black/5 text-black/60 hover:text-black transition-colors cursor-pointer"
-              title="Open Sidebar"
-            >
-              <Menu size={20} />
-            </button>
-          )}
           <div className="flex flex-col min-w-0">
             <span className="text-[10px] font-semibold text-black/50 tracking-widest uppercase font-mono mb-0.5">
               Research Dossier
@@ -125,17 +116,6 @@ export function ReportPanel({
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>Open Chat</span>
-            </button>
-          )}
-
-          {/* New Research Button (Only shown when chat is NOT open or on large screens/view 1) */}
-          {!isChatOpen && (
-            <button
-              onClick={onNewResearch}
-              className="flex bg-yellow-400 items-center space-x-2 px-3 py-2 rounded-md border border-black hover:bg-amber-400 text-black text-sm font-medium transition-all duration-200 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>New Research</span>
             </button>
           )}
         </div>

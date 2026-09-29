@@ -157,16 +157,7 @@ export default function LandingView({ onSubmit, onToggleSidebar, isSidebarOpen }
 
   return (
     <div className="min-h-screen bg-white overflow-y-auto overflow-x-hidden">
-      {/* ── SIDEBAR TOGGLE ── */}
-      {!isSidebarOpen && (
-        <button
-          onClick={onToggleSidebar}
-          className="fixed top-6 left-6 z-50 p-2.5 rounded-xl bg-white/80 backdrop-blur-sm border border-black/5 hover:bg-black/5 text-black/50 hover:text-black transition-all duration-200 cursor-pointer shadow-sm"
-          title="Open Sidebar"
-        >
-          <Menu size={20} />
-        </button>
-      )}
+
 
       {/* ════════════════════════════════════════════════════════════════
            HERO SECTION

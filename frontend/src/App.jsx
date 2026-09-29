@@ -129,17 +129,17 @@ function App() {
 
   return (
     <div className="flex h-screen w-full bg-[#f9f9f9] text-black font-sans antialiased overflow-hidden selection:bg-black/10 selection:text-black">
-      {isSidebarOpen && (
-        <Sidebar
-          sessions={sessions}
-          loading={loadingSessions}
-          activeSessionId={activeSessionId}
-          onSelectSession={handleSelectSession}
-          onRemoveSession={handleRemoveActive}
-          onDeleteSession={removeSession}
-          onNewResearch={handleReset}
-        />
-      )}
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        sessions={sessions}
+        loading={loadingSessions}
+        activeSessionId={activeSessionId}
+        onSelectSession={handleSelectSession}
+        onRemoveSession={handleRemoveActive}
+        onDeleteSession={removeSession}
+        onNewResearch={handleReset}
+      />
 
       <main className="flex-1 h-full overflow-y-auto relative">
         {view === 'landing' && (
