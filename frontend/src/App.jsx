@@ -143,7 +143,11 @@ function App() {
 
       <main className="flex-1 h-full overflow-y-auto relative">
         {view === 'landing' && (
-          <LandingView onSubmit={handleResearch} />
+          <LandingView 
+            onSubmit={handleResearch} 
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            isSidebarOpen={isSidebarOpen}
+          />
         )}
         
         {view === 'loading' && (

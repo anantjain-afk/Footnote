@@ -1,7 +1,7 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
-function CitationText({ children, sources = [] }) {
+export function CitationText({ children, sources = [] }) {
   // match [1] or [1,2] or [1,2,3] pattern
   const citationRegex = /\[(\d+(?:,\d+)*)\]/g;
   const text = String(children);
@@ -17,7 +17,7 @@ function CitationText({ children, sources = [] }) {
           const ids = match[1].split(',');
           return (
             <sup key={i} className="ml-0.5">
-              [
+              <span className='!text-purple-800 hover:!text-purple-900'>[
               {ids.map((idStr, index) => {
                 const id = parseInt(idStr.trim());
                 const source = sources.find(s => (s.id === id || s.source_number === id));
@@ -28,15 +28,15 @@ function CitationText({ children, sources = [] }) {
                       href={url}
                       target={source ? "_blank" : undefined}
                       rel={source ? "noopener noreferrer" : undefined}
-                      className="text-black hover:underline font-mono text-xs font-medium"
+                      className="!text-purple-800 hover:!text-purple-900 font-mono text-xs font-bold hover:underline"
                     >
                       {idStr}
                     </a>
-                    {index < ids.length - 1 ? ',' : ''}
+                    {index < ids.length - 1 ? <span className="text-black">,</span> : ''}
                   </span>
                 )
               })}
-              ]
+              ]</span>
             </sup>
           );
         }

@@ -30,9 +30,9 @@ function SourcesList({ sources }) {
               >
                 {source.title || source.url}
               </a>
-              <p className="text-black/60 text-xs mt-1 line-clamp-2 break-all">
+              {/* <p className="text-black/60 text-xs mt-1 line-clamp-2 break-all">
                 {source.snippet}
-              </p>
+              </p> */}
             </div>
           </li>
           );
@@ -132,7 +132,7 @@ export function ReportPanel({
           {!isChatOpen && (
             <button
               onClick={onNewResearch}
-              className="flex items-center space-x-2 px-3 py-2 rounded-md border border-black hover:bg-black/5 text-black text-sm font-medium transition-all duration-200 cursor-pointer"
+              className="flex bg-yellow-400 items-center space-x-2 px-3 py-2 rounded-md border border-black hover:bg-amber-400 text-black text-sm font-medium transition-all duration-200 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>New Research</span>

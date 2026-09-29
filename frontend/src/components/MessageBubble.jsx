@@ -1,4 +1,5 @@
 import { Sparkles, User, FileEdit } from 'lucide-react'
+import { CitationText } from './MarkdownReport'
 
 export function MessageBubble({ message }) {
   const isUser = message.role === 'user'
@@ -10,7 +11,7 @@ export function MessageBubble({ message }) {
       <div className="flex items-center space-x-1.5 mb-1.5 px-1">
         {isUser ? (
           <>
-            <span className="text-[10px] font-bold text-black/40 uppercase tracking-widest font-mono">
+            <span className="text-[10px] font-bold text-black/40 uppercase tracking-widest font-sans">
               User
             </span>
             <User className="w-3 h-3 text-black/40" />
@@ -18,7 +19,7 @@ export function MessageBubble({ message }) {
         ) : (
           <>
             <Sparkles className="w-3 h-3 text-black/60" />
-            <span className="text-[10px] font-bold text-black/60 uppercase tracking-widest font-mono">
+            <span className="text-[10px] font-bold text-black/60 uppercase tracking-widest font-sans">
               Research Assistant
             </span>
           </>
@@ -27,13 +28,13 @@ export function MessageBubble({ message }) {
 
       {/* Bubble container */}
       <div
-        className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed transition-all duration-200 selection:bg-black/10 selection:text-black ${
+        className={`max-w-[85%] px-5 py-3.5 rounded-2xl leading-relaxed transition-all duration-200 selection:bg-black/10 selection:text-black ${
           isUser
-            ? 'bg-[#f4f4f5] text-black rounded-tr-none font-sans font-medium'
-            : 'bg-white text-black border border-black/5 rounded-tl-none font-sans shadow-[0_0_15px_rgba(0,0,0,0.02)]'
+            ? 'bg-[#f4f4f5] text-black rounded-tr-none font-sans text-[14px] font-medium'
+            : 'bg-white text-black border border-black/5 rounded-tl-none font-serif text-[15px] shadow-[0_0_15px_rgba(0,0,0,0.02)]'
         }`}
       >
-        <p className="whitespace-pre-wrap">{message.content}</p>
+        <p className="whitespace-pre-wrap"><CitationText>{message.content}</CitationText></p>
       </div>
 
       {/* "✏️ Report Updated" badge below bubble (only for Assistant + IMPROVE) */}

@@ -50,7 +50,7 @@ export function ChatPanel({
             <div className="w-12 h-12 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center text-black/60 mb-3">
               <Sparkles className="w-5 h-5" />
             </div>
-            <p className="text-black/50 text-xs font-mono">
+            <p className="text-black/50 text-xs font-sans font-medium uppercase tracking-wider">
               Ask a question about the report or request updates.
             </p>
           </div>
