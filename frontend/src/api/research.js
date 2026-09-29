@@ -5,7 +5,10 @@ export async function exportReportPDF(topic, report) {
     body: JSON.stringify({ topic, report }),
   });
 
-  if (!response.ok) throw new Error("PDF export failed");
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    throw new Error(`PDF export failed (${response.status}): ${errorText || response.statusText}`);
+  }
 
   // stream the binary response into a blob and trigger download
   const blob = await response.blob();

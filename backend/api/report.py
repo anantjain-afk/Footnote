@@ -1,9 +1,12 @@
-from fastapi import APIRouter
+import logging
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from ..graph.research.builder import graph
 import uuid
 from fastapi.responses import FileResponse
 from ..services.pdf.renderer import generate_pdf
+
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 class ReportRequest(BaseModel):
@@ -30,11 +33,15 @@ async def export_pdf(body: ExportRequest):
     filename = f"report_{uuid.uuid4().hex[:8]}.pdf"
     output_path = f"/tmp/{filename}"
 
-    await generate_pdf(
-        topic=body.topic,
-        report_md=body.report,
-        output_path=output_path
-    )
+    try:
+        await generate_pdf(
+            topic=body.topic,
+            report_md=body.report,
+            output_path=output_path
+        )
+    except Exception as e:
+        logger.error("PDF generation failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
 
     return FileResponse(
         path=output_path,
