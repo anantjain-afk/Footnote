@@ -26,6 +26,7 @@ async def create_report(request: ReportRequest):
 class ExportRequest(BaseModel):
     topic: str
     report: str   # raw markdown from frontend
+    sources: list[dict] = []
 
 @router.post("/report/export")
 async def export_pdf(body: ExportRequest):
@@ -37,7 +38,8 @@ async def export_pdf(body: ExportRequest):
         await generate_pdf(
             topic=body.topic,
             report_md=body.report,
-            output_path=output_path
+            output_path=output_path,
+            sources=body.sources
         )
     except Exception as e:
         logger.error("PDF generation failed: %s", e, exc_info=True)

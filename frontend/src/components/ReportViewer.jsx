@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { exportReportPDF } from '../api/research'
 
-export function ReportViewer({ topic, report, generatedAt, onReset }) {
+export function ReportViewer({ topic, report, sources = [], generatedAt, onReset }) {
   const [copied, setCopied] = useState(false)
   const [exporting, setExporting] = useState(false)
 
@@ -20,7 +20,7 @@ export function ReportViewer({ topic, report, generatedAt, onReset }) {
   const handleExport = async () => {
     setExporting(true)
     try {
-      await exportReportPDF(topic, report)
+      await exportReportPDF(topic, report, sources)
     } catch (e) {
       console.error('Export failed:', e)
     } finally {

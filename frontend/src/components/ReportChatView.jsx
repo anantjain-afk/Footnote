@@ -110,7 +110,7 @@ export function ReportChatView({
   const handleExportPdf = async () => {
     setExporting(true)
     try {
-      await exportReportPDF(topic, report)
+      await exportReportPDF(topic, report, sources)
     } catch (e) {
       console.error('PDF export failed:', e)
     } finally {

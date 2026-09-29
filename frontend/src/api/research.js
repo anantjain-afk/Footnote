@@ -1,8 +1,8 @@
-export async function exportReportPDF(topic, report) {
+export async function exportReportPDF(topic, report, sources = []) {
   const response = await fetch("http://localhost:8000/api/report/export", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ topic, report }),
+    body: JSON.stringify({ topic, report, sources }),
   });
 
   if (!response.ok) {
