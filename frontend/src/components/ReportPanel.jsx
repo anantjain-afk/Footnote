@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import MarkdownReport from './MarkdownReport'
-import { FileDown, Plus, Loader2, Menu } from 'lucide-react'
+import { FileDown, Plus, Loader2, Menu, MessageSquare } from 'lucide-react'
 
 function SourcesList({ sources }) {
   if (!sources || sources.length === 0) return null;
@@ -52,7 +52,9 @@ export function ReportPanel({
   onNewResearch,
   exporting,
   onToggleSidebar,
-  isSidebarOpen
+  isSidebarOpen,
+  hasMessages,
+  onToggleChat
 }) {
   const panelRef = useRef(null)
 
@@ -114,6 +116,17 @@ export function ReportPanel({
             )}
             <span>{exporting ? 'Exporting...' : 'Export PDF'}</span>
           </button>
+
+          {/* Toggle Chat Button */}
+          {hasMessages && !isChatOpen && (
+            <button
+              onClick={onToggleChat}
+              className="flex items-center space-x-2 px-3 py-2 rounded-md border border-black hover:bg-black/5 text-black text-sm font-medium transition-all duration-200 cursor-pointer"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Open Chat</span>
+            </button>
+          )}
 
           {/* New Research Button (Only shown when chat is NOT open or on large screens/view 1) */}
           {!isChatOpen && (

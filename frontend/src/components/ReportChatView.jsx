@@ -143,6 +143,8 @@ export function ReportChatView({
               exporting={exporting}
               onToggleSidebar={onToggleSidebar}
               isSidebarOpen={isSidebarOpen}
+              hasMessages={messages.length > 0}
+              onToggleChat={() => setIsChatOpen(false)}
             />
           </div>
           <div className="w-[40%] h-full">
@@ -172,6 +174,8 @@ export function ReportChatView({
             exporting={exporting}
             onToggleSidebar={onToggleSidebar}
             isSidebarOpen={isSidebarOpen}
+            hasMessages={messages.length > 0}
+            onToggleChat={() => setIsChatOpen(true)}
           />
 
           {/* Sticky bottom floating input overlay */}

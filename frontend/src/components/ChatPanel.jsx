@@ -21,14 +21,14 @@ export function ChatPanel({
   }, [messages])
 
   return (
-    <div className="h-full flex flex-col bg-[#111111] border-l border-[#2a2a2a] relative">
+    <div className="h-full flex flex-col bg-white border-l border-black/10 relative">
       {/* Sticky header */}
-      <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-[#111111]/90 backdrop-blur-md border-b border-[#2a2a2a]">
+      <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-white/90 backdrop-blur-md border-b border-black/5">
         <div className="flex items-center space-x-2">
-          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-400">
+          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-black/5 text-black">
             <Sparkles className="w-4 h-4 animate-pulse-slow" />
           </div>
-          <span className="text-sm font-bold text-white font-sans">
+          <span className="text-sm font-bold text-black font-sans">
             Research Assistant
           </span>
         </div>
@@ -36,7 +36,7 @@ export function ChatPanel({
         {/* Close Chat button */}
         <button
           onClick={onCloseChat}
-          className="flex items-center justify-center w-7 h-7 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all duration-200 cursor-pointer"
+          className="flex items-center justify-center w-7 h-7 rounded-lg text-black/40 hover:text-black hover:bg-black/5 transition-all duration-200 cursor-pointer"
           title="Close Chat"
         >
           <X className="w-4 h-4" />
@@ -47,10 +47,10 @@ export function ChatPanel({
       <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth">
         {messages.length === 0 && !isStreaming ? (
           <div className="h-full flex flex-col items-center justify-center text-center px-6">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-center text-indigo-400 mb-3">
+            <div className="w-12 h-12 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center text-black/60 mb-3">
               <Sparkles className="w-5 h-5" />
             </div>
-            <p className="text-zinc-400 text-xs font-mono">
+            <p className="text-black/50 text-xs font-mono">
               Ask a question about the report or request updates.
             </p>
           </div>
@@ -68,7 +68,7 @@ export function ChatPanel({
       </div>
 
       {/* Input area fixed to the bottom */}
-      <div className="p-4 border-t border-[#2a2a2a] bg-[#111111] pb-6">
+      <div className="p-4 border-t border-black/5 bg-white pb-6">
         <ChatInput
           value={inputValue}
           onChange={onInputChange}
