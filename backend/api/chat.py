@@ -220,7 +220,7 @@ async def chat_stream(session_id: str, body: ChatRequest):
                     update_report_in_db(conn, session_id, updated_report)
 
             # Send done event with final payload
-            payload = {"intent": intent}
+            payload = {"intent": intent, "response": final_response}
             if intent == "IMPROVE" and updated_report:
                 payload["updated_report"] = updated_report
                 

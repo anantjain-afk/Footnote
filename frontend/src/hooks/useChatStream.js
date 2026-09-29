@@ -68,6 +68,10 @@ export function useChatStream(sessionId) {
               } else if (eventType === 'done') {
                 finalIntent = data.intent;
                 if (data.updated_report) finalReport = data.updated_report;
+                if (data.response && !accumulatedMessage) {
+                  accumulatedMessage = data.response;
+                  setStreamingMessage(accumulatedMessage);
+                }
               } else if (eventType === 'error') {
                 console.error("Chat error:", data.detail);
               }
