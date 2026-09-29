@@ -14,6 +14,7 @@ function App() {
   const [activeSessionId, setActiveSessionId] = useState(null)
   const [topic, setTopic] = useState('')
   const [reportData, setReportData] = useState('')
+  const [sources, setSources] = useState([])
   const [errorMsg, setErrorMsg] = useState('')
   const [generatedAt, setGeneratedAt] = useState('')
 
@@ -26,6 +27,7 @@ function App() {
     scores, 
     isComplete, 
     report: streamedReport, 
+    sources: streamedSources,
     error: streamError, 
     iterations 
   } = useResearchStream(view === 'loading' ? activeSessionId : null)
@@ -34,6 +36,7 @@ function App() {
   useEffect(() => {
     if (view === 'loading' && isComplete && streamedReport) {
       setReportData(streamedReport)
+      setSources(streamedSources || [])
       setGeneratedAt(new Date().toISOString())
       setView('report')
       refresh()
@@ -54,6 +57,7 @@ function App() {
     setView('loading')
     setErrorMsg('')
     setReportData('')
+    setSources([])
     setActiveSessionId(null)
 
     try {
@@ -89,6 +93,7 @@ function App() {
       } else {
         const reportText = data.report?.content || "";
         setReportData(reportText);
+        setSources(data.sources || []);
         setGeneratedAt(data.report?.created_at || data.session.completed_at || new Date().toISOString());
         setView('report');
       }
@@ -104,6 +109,7 @@ function App() {
     setActiveSessionId(null)
     setTopic('')
     setReportData('')
+    setSources([])
     setErrorMsg('')
     setGeneratedAt('')
   }
@@ -152,6 +158,7 @@ function App() {
             sessionId={activeSessionId}
             topic={topic} 
             initialReport={reportData} 
+            sources={sources}
             generatedAt={generatedAt} 
             onReset={handleReset} 
           />

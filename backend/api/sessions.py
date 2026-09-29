@@ -21,6 +21,7 @@ class CreateSessionRequest(BaseModel):
 async def run_research_pipeline(session_id: str, topic: str):
     graph = build_graph()
     final_report = ""
+    final_sources = []
 
     try:
         # Use LangGraph's astream_events to get real-time node progress
@@ -50,6 +51,7 @@ async def run_research_pipeline(session_id: str, topic: str):
                     output = event["data"].get("output", {})
                     if output and "report" in output:
                         final_report = output["report"]
+                        final_sources = output.get("sources", [])
 
         # Persist report and update session status to completed
         with get_db() as conn:
@@ -58,6 +60,15 @@ async def run_research_pipeline(session_id: str, topic: str):
                    VALUES (?, ?, ?, ?)""",
                 (str(uuid.uuid4()), session_id, final_report, len(final_report.split()))
             )
+            for source in final_sources:
+                conn.execute(
+                    """INSERT INTO report_sources
+                       (id, session_id, source_number, url, title, snippet)
+                       VALUES (?, ?, ?, ?, ?, ?)""",
+                    (str(uuid.uuid4()), session_id,
+                     source["id"], source["url"],
+                     source["title"], source["snippet"])
+                )
             conn.execute(
                 """UPDATE research_sessions
                    SET status='completed', completed_at=?
@@ -66,7 +77,7 @@ async def run_research_pipeline(session_id: str, topic: str):
             )
 
         # Notify frontend that we are completely done
-        await publish_event(session_id, "complete", {"report": final_report})
+        await publish_event(session_id, "complete", {"report": final_report, "sources": final_sources})
 
     except Exception as e:
         logger.error(f"Pipeline failed for session {session_id}: {e}", exc_info=True)
@@ -176,9 +187,18 @@ def get_session(session_id: str):
             (session_id,)
         ).fetchone()
 
+        sources = conn.execute(
+            """SELECT source_number, url, title, snippet
+               FROM report_sources
+               WHERE session_id=?
+               ORDER BY source_number ASC""",
+            (session_id,)
+        ).fetchall()
+
     return {
         "session": dict(session),
-        "report": dict(report) if report else None
+        "report": dict(report) if report else None,
+        "sources": [dict(s) for s in sources]
     }
 
 

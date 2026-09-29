@@ -2,9 +2,50 @@ import { useEffect, useRef } from 'react'
 import MarkdownReport from './MarkdownReport'
 import { FileDown, Plus, Loader2 } from 'lucide-react'
 
+function SourcesList({ sources }) {
+  if (!sources || sources.length === 0) return null;
+  return (
+    <div className="mt-8 pt-6 border-t border-gray-800">
+      <h2 className="text-lg font-semibold text-gray-200 mb-4">
+        References
+      </h2>
+      <ol className="space-y-3">
+        {sources.map((source) => {
+          const id = source.id || source.source_number;
+          return (
+          <li
+            key={id}
+            id={`ref-${id}`}
+            className="flex gap-3 text-sm"
+          >
+            <span className="text-indigo-400 font-mono shrink-0">
+              [{id}]
+            </span>
+            <div>
+              <a
+                href={source.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-200 hover:text-white underline underline-offset-2"
+              >
+                {source.title || source.url}
+              </a>
+              <p className="text-gray-500 text-xs mt-1 line-clamp-2">
+                {source.snippet}
+              </p>
+            </div>
+          </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
 export function ReportPanel({
   topic,
   report,
+  sources,
   isChatOpen,
   isUpdatingReport,
   onExportPdf,
@@ -75,7 +116,8 @@ export function ReportPanel({
           isChatOpen ? 'px-6 md:px-8 pb-12' : ''
         }`}
       >
-        <MarkdownReport content={report} />
+        <MarkdownReport content={report} sources={sources} />
+        <SourcesList sources={sources} />
       </div>
 
       {/* Updating Loading Overlay */}

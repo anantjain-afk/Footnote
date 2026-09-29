@@ -37,6 +37,7 @@ async def extract_contents(state: State) -> dict:
 
     # Filter out failed extractions and log them individually
     contents = []
+    sources = []
     for url, result in zip(urls, results):
         if isinstance(result, Exception):
             logger.warning(
@@ -47,6 +48,18 @@ async def extract_contents(state: State) -> dict:
         # Use configurable max chars instead of hardcoded 1000
         text = result.markdown[: settings.extract_max_chars]
         contents.append(clean_extracted(text))
+        
+        # Build source object
+        title = url
+        if hasattr(result, "metadata") and result.metadata:
+            title = getattr(result.metadata, "title", None) or url
+
+        sources.append({
+            "id": len(sources) + 1,
+            "url": url,
+            "title": title,
+            "snippet": text[:800]
+        })
 
     duration = round((time.time() - start) * 1000)
     logger.info(
@@ -60,6 +73,6 @@ async def extract_contents(state: State) -> dict:
             extra={"node": "extract_contents"},
         )
         # Return empty list — generate node will work with whatever it has
-        return {"extracted_text": ["No content could be extracted from the discovered sources."]}
+        return {"extracted_text": ["No content could be extracted from the discovered sources."], "sources": []}
 
-    return {"extracted_text": contents}
+    return {"extracted_text": contents, "sources": sources}

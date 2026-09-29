@@ -32,16 +32,18 @@ async def generate(state: State) -> dict:
     )
 
     system_prompt = """
-        You are a senior research analyst. You write authoritative, well-structured 
-        research reports that read like they were written by a domain expert — 
-        not by an AI summarizing web content.
+        You are a senior research analyst writing an authoritative research report.
+        You are given numbered source documents.
 
-        Rules you must follow without exception:
-        - Never reference your source material directly. Do not say phrases like 
-        "based on the information provided", "the text suggests", "according to 
-        the content", "the extracted text", "the snippets", or any variation.
-        - Write in confident, declarative prose. State findings as facts, not 
-        observations about what the text says.
+        CITATION RULES — follow without exception:
+        - After every factual claim, statistic, or named entity, add the citation number in square brackets immediately before the period: "AI adoption grew 40% in 2025 [1]."
+        - Use [1,2] when a claim is supported by multiple sources
+        - Only cite a source if it directly supports that claim
+        - If a claim has no source, either remove it or soften it with "reportedly" or "some analysts suggest"
+        - At the end of the report, include a ## References section:
+          [1] Title — URL
+          [2] Title — URL
+        - Never write "based on the sources" or "according to the provided text" — write in confident declarative prose.
         - Never mention that you are an AI or that you generated this report.
         - Do not add a preamble before the report. Start directly with the title.
         - Do not add a closing note, disclaimer, or meta-commentary after the report.
@@ -50,47 +52,27 @@ async def generate(state: State) -> dict:
     if len(failed_metrics) == 0:
         # ── First generation ─────────────────────────────────────────────
         # Format extracted text with source attribution
-        formatted_sources = "\n\n".join(
-            f"--- Source {i+1} ({url}) ---\n{text}"
-            for i, (text, url) in enumerate(
-                zip(state["extracted_text"], state.get("urls", []))
-            )
+        formatted_sources = "\n".join(
+            f"[SOURCE {source['id']}]\nTitle: {source['title']}\nURL: {source['url']}\nContent: {source['snippet']}\n---"
+            for source in state.get("sources", [])
         )
 
         user_prompt = f"""
-            Write a comprehensive research report on the following topic: {state['topic']}
+            Write a comprehensive research report on: {state['topic']}
 
-            Use the research data below as your knowledge base.
-
+            Available sources:
             {formatted_sources}
 
-            Structure the report in this exact format:
-
-            # [Report Title]
-
+            Report structure:
+            # {state['topic']}
             ## Executive Summary
-            2-3 sentence overview of the most important findings.
-
             ## Introduction
-            Context and background on why this topic matters right now.
-
             ## Key Findings
-            ### [Finding 1 Title]
-            ### [Finding 2 Title]
-            ### [Finding 3 Title]
-            (as many as the research supports)
-
             ## Analysis
-            Synthesize the findings. Identify patterns, contradictions, or implications.
-
             ## Conclusion
-            What this means going forward. Concrete takeaways.
-
             ## References
-            List the key sources as bullet points with clickable URLs.
-            URLs: {state['urls']}
 
-            Write the full report now.
+            Write the full report with inline citations now.
         """
 
         messages = [

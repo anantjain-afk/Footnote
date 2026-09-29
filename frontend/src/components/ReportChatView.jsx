@@ -10,6 +10,7 @@ export function ReportChatView({
   sessionId,
   topic,
   initialReport,
+  sources,
   generatedAt,
   onReset
 }) {
@@ -132,6 +133,7 @@ export function ReportChatView({
             <ReportPanel
               topic={topic}
               report={report}
+              sources={sources}
               isChatOpen={true}
               isUpdatingReport={isUpdatingReport}
               onExportPdf={handleExportPdf}
@@ -158,6 +160,7 @@ export function ReportChatView({
           <ReportPanel
             topic={topic}
             report={report}
+            sources={sources}
             isChatOpen={false}
             isUpdatingReport={isUpdatingReport}
             onExportPdf={handleExportPdf}

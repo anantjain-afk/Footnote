@@ -8,6 +8,7 @@ export function useResearchStream(sessionId) {
   const [scores, setScores] = useState(null);
   const [isComplete, setIsComplete] = useState(false);
   const [report, setReport] = useState(null);
+  const [sources, setSources] = useState([]);
   const [error, setError] = useState(null);
   const [iterations, setIterations] = useState(0);
 
@@ -20,6 +21,7 @@ export function useResearchStream(sessionId) {
     setScores(null);
     setIsComplete(false);
     setReport(null);
+    setSources([]);
     setError(null);
     setIterations(0);
 
@@ -53,6 +55,7 @@ export function useResearchStream(sessionId) {
     eventSource.addEventListener('complete', (e) => {
       const data = JSON.parse(e.data);
       setReport(data.report);
+      setSources(data.sources || []);
       setIsComplete(true);
       eventSource.close();
     });
@@ -68,5 +71,5 @@ export function useResearchStream(sessionId) {
     };
   }, [sessionId]);
 
-  return { events, currentNode, scores, isComplete, report, error, iterations };
+  return { events, currentNode, scores, isComplete, report, sources, error, iterations };
 }

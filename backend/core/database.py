@@ -53,11 +53,23 @@ def init_db():
                 created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
             );
 
+            CREATE TABLE IF NOT EXISTS report_sources (
+                id            TEXT PRIMARY KEY,
+                session_id    TEXT NOT NULL REFERENCES research_sessions(id),
+                source_number INTEGER NOT NULL,
+                url           TEXT NOT NULL,
+                title         TEXT,
+                snippet       TEXT,
+                created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+
             CREATE INDEX IF NOT EXISTS idx_sessions_created
                 ON research_sessions(created_at DESC);
             CREATE INDEX IF NOT EXISTS idx_reports_session
                 ON reports(session_id);
             CREATE INDEX IF NOT EXISTS idx_chat_session
                 ON chat_messages(session_id, created_at ASC);
+            CREATE INDEX IF NOT EXISTS idx_sources_session
+                ON report_sources(session_id, source_number ASC);
         """)
     logger.info("Database initialized", extra={"node": "startup"})
