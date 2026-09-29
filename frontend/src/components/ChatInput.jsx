@@ -20,11 +20,11 @@ export function ChatInput({
   return (
     <div className="w-full flex flex-col space-y-2">
       {/* Optional hint text shown above input in View 1 */}
-      {showHint && (
+      {/* {showHint && (
         <p className="text-center text-xs text-black/40 font-mono tracking-wide leading-none mb-2 pt-2">
           Ask questions or say <span className="text-black/70 font-semibold">"make the conclusion longer"</span> to improve
         </p>
-      )}
+      )} */}
 
       {/* Input container */}
       <div 

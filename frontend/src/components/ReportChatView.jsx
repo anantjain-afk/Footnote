@@ -179,18 +179,18 @@ export function ReportChatView({
           />
 
           {/* Sticky bottom floating input overlay */}
-          <div className="absolute bottom-6 left-0 right-0 p-2 bg-transparent z-10 flex justify-center pointer-events-none">
-            <div className="w-full max-w-2xl px-4 md:px-0 pointer-events-auto shadow-[0_0_40px_rgba(255,255,255,1)] rounded-3xl">
-              <ChatInput
-                value={inputValue}
-                onChange={setInputValue}
-                onSubmit={() => handleSend(inputValue)}
-                isLoading={isLoading}
-                showHint={true}
-                placeholder="Ask about this report or request changes..."
-              />
-            </div>
-          </div>
+          <div className="absolute bottom-6 left-0 right-0 z-10 flex justify-center pointer-events-none">
+  <div className="relative w-full max-w-2xl pointer-events-auto">
+    <ChatInput
+      value={inputValue}
+      onChange={setInputValue}
+      onSubmit={() => handleSend(inputValue)}
+      isLoading={isLoading}
+      showHint={true}
+      placeholder="Ask about this report or request changes..."
+    />
+  </div>
+</div>
         </div>
       )}
     </div>
