@@ -55,13 +55,17 @@
 
 /* Custom global styles */
 ::selection {
-  background-color: #2dd4bf; /* Tailwind teal-400 */
+  background-color: #2dd4bf; /* teal-400 / cyan */
   color: #000000;
 }
 
 ::-moz-selection {
-  background-color: #2dd4bf; /* Tailwind teal-400 */
+  background-color: #2dd4bf; /* teal-400 / cyan */
   color: #000000;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 html, body {
