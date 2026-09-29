@@ -12,7 +12,9 @@ export function ReportChatView({
   initialReport,
   sources,
   generatedAt,
-  onReset
+  onReset,
+  onToggleSidebar,
+  isSidebarOpen
 }) {
   const [report, setReport] = useState(initialReport)
   const [messages, setMessages] = useState([])
@@ -117,7 +119,7 @@ export function ReportChatView({
   }
 
   return (
-    <div className="w-full h-full relative bg-[#0a0a0a] text-zinc-100 overflow-hidden font-sans">
+    <div className="w-full h-full relative bg-[#f9f9f9] text-black overflow-hidden font-sans">
       {/* Dynamic green toast notification when report updates */}
       {showToast && (
         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center space-x-2 bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-900/10 font-sans text-xs font-semibold tracking-wide animate-[fade-in_0.2s_ease-out]">
@@ -139,6 +141,8 @@ export function ReportChatView({
               onExportPdf={handleExportPdf}
               onNewResearch={onReset}
               exporting={exporting}
+              onToggleSidebar={onToggleSidebar}
+              isSidebarOpen={isSidebarOpen}
             />
           </div>
           <div className="w-[40%] h-full">
@@ -166,11 +170,13 @@ export function ReportChatView({
             onExportPdf={handleExportPdf}
             onNewResearch={onReset}
             exporting={exporting}
+            onToggleSidebar={onToggleSidebar}
+            isSidebarOpen={isSidebarOpen}
           />
 
           {/* Sticky bottom floating input overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/90 to-transparent z-10 flex justify-center">
-            <div className="w-full max-w-2xl px-4 md:px-0">
+          <div className="absolute bottom-6 left-0 right-0 p-2 bg-transparent z-10 flex justify-center pointer-events-none">
+            <div className="w-full max-w-2xl px-4 md:px-0 pointer-events-auto shadow-[0_0_40px_rgba(255,255,255,1)] rounded-3xl">
               <ChatInput
                 value={inputValue}
                 onChange={setInputValue}

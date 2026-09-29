@@ -22,4 +22,11 @@ dist-ssr
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+*.agents
+.agents/
+.agent/
+.claude/
+.codex/
+.cursor/
+.gemini/
+.openrouter/

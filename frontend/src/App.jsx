@@ -12,6 +12,7 @@ import { Loader2 } from 'lucide-react'
 function App() {
   const [view, setView] = useState('landing') // 'landing' | 'loading' | 'report' | 'error' | 'session_loading'
   const [activeSessionId, setActiveSessionId] = useState(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [topic, setTopic] = useState('')
   const [reportData, setReportData] = useState('')
   const [sources, setSources] = useState([])
@@ -127,16 +128,18 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen w-screen bg-[#030303] text-zinc-100 font-sans antialiased overflow-hidden selection:bg-purple-500/30 selection:text-purple-200">
-      <Sidebar
-        sessions={sessions}
-        loading={loadingSessions}
-        activeSessionId={activeSessionId}
-        onSelectSession={handleSelectSession}
-        onRemoveSession={handleRemoveActive}
-        onDeleteSession={removeSession}
-        onNewResearch={handleReset}
-      />
+    <div className="flex h-screen w-full bg-[#f9f9f9] text-black font-sans antialiased overflow-hidden selection:bg-black/10 selection:text-black">
+      {isSidebarOpen && (
+        <Sidebar
+          sessions={sessions}
+          loading={loadingSessions}
+          activeSessionId={activeSessionId}
+          onSelectSession={handleSelectSession}
+          onRemoveSession={handleRemoveActive}
+          onDeleteSession={removeSession}
+          onNewResearch={handleReset}
+        />
+      )}
 
       <main className="flex-1 h-full overflow-y-auto relative">
         {view === 'landing' && (
@@ -160,7 +163,9 @@ function App() {
             initialReport={reportData} 
             sources={sources}
             generatedAt={generatedAt} 
-            onReset={handleReset} 
+            onReset={handleReset}
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            isSidebarOpen={isSidebarOpen}
           />
         )}
         

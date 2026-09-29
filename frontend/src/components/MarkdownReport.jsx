@@ -28,7 +28,7 @@ function CitationText({ children, sources = [] }) {
                       href={url}
                       target={source ? "_blank" : undefined}
                       rel={source ? "noopener noreferrer" : undefined}
-                      className="text-indigo-400 hover:text-indigo-300 font-mono text-xs"
+                      className="text-black hover:underline font-mono text-xs font-medium"
                     >
                       {idStr}
                     </a>
@@ -48,7 +48,7 @@ function CitationText({ children, sources = [] }) {
 
 export function MarkdownReport({ content, sources = [] }) {
   return (
-    <div className="max-w-[800px] mx-auto markdown-body font-serif selection:bg-indigo-500/30 selection:text-indigo-200">
+    <div className="w-full markdown-body font-serif selection:bg-black/10 selection:text-black">
       <ReactMarkdown 
         remarkPlugins={[remarkGfm]}
         components={{ 
