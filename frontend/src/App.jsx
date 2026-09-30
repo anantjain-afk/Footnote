@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import LandingView from './components/LandingView'
 import LoadingView from './components/LoadingView'
+import DeepResearchLoadingView from './components/DeepResearchLoadingView'
 import ReportChatView from './components/ReportChatView'
 import ErrorView from './components/ErrorView'
 import { Sidebar } from './components/Sidebar'
@@ -11,6 +12,7 @@ import { Loader2 } from 'lucide-react'
 
 function App() {
   const [view, setView] = useState('landing') // 'landing' | 'loading' | 'report' | 'error' | 'session_loading'
+  const [mode, setMode] = useState('normal')
   const [activeSessionId, setActiveSessionId] = useState(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [topic, setTopic] = useState('')
@@ -30,7 +32,14 @@ function App() {
     report: streamedReport, 
     sources: streamedSources,
     error: streamError, 
-    iterations 
+    iterations,
+    subQuestions,
+    subQuestionProgress,
+    researchRound,
+    gaps,
+    sectionProgress,
+    stats,
+    verifiedPct
   } = useResearchStream(view === 'loading' ? activeSessionId : null)
 
   // React to SSE completion
@@ -53,8 +62,9 @@ function App() {
     }
   }, [streamError, view, refresh])
 
-  const handleResearch = async (searchTopic) => {
+  const handleResearch = async (searchTopic, searchMode = 'normal') => {
     setTopic(searchTopic)
+    setMode(searchMode)
     setView('loading')
     setErrorMsg('')
     setReportData('')
@@ -62,7 +72,7 @@ function App() {
     setActiveSessionId(null)
 
     try {
-      const data = await createSession(searchTopic);
+      const data = await createSession(searchTopic, searchMode);
       if (data && data.session_id) {
         setActiveSessionId(data.session_id);
         // Refresh history after a short delay so sidebar shows 'running'
@@ -85,6 +95,7 @@ function App() {
     try {
       const data = await getSession(sessionId); // { session, report }
       setTopic(data.session.topic);
+      setMode(data.session.mode || 'normal');
       
       if (data.session.status === 'running') {
         setView('loading');
@@ -151,13 +162,30 @@ function App() {
         )}
         
         {view === 'loading' && (
-          <LoadingView 
-            topic={topic}
-            currentNode={currentNode}
-            scores={scores}
-            events={events}
-            iterations={iterations}
-          />
+          mode === 'deep_research' ? (
+            <DeepResearchLoadingView 
+              topic={topic}
+              currentNode={currentNode}
+              scores={scores}
+              events={events}
+              iterations={iterations}
+              subQuestions={subQuestions}
+              subQuestionProgress={subQuestionProgress}
+              researchRound={researchRound}
+              gaps={gaps}
+              sectionProgress={sectionProgress}
+              stats={stats}
+              verifiedPct={verifiedPct}
+            />
+          ) : (
+            <LoadingView 
+              topic={topic}
+              currentNode={currentNode}
+              scores={scores}
+              events={events}
+              iterations={iterations}
+            />
+          )
         )}
         
         {view === 'report' && (

@@ -3,6 +3,7 @@ import { Menu, Search, Sparkles, Zap, BookOpen, Shield, Brain, ArrowRight, Check
 
 export default function LandingView({ onSubmit, onToggleSidebar, isSidebarOpen }) {
   const [topic, setTopic] = useState('')
+  const [mode, setMode] = useState('normal')
   const [activeFeature, setActiveFeature] = useState(0)
   const [demoStep, setDemoStep] = useState(0)
   const [demoRunning, setDemoRunning] = useState(false)
@@ -12,7 +13,7 @@ export default function LandingView({ onSubmit, onToggleSidebar, isSidebarOpen }
   const handleFormSubmit = (e) => {
     e.preventDefault()
     if (topic.trim()) {
-      onSubmit(topic.trim())
+      onSubmit(topic.trim(), mode)
     }
   }
 
@@ -217,6 +218,33 @@ export default function LandingView({ onSubmit, onToggleSidebar, isSidebarOpen }
               </div>
             </div>
           </form>
+
+          {/* Mode Selector */}
+          <div className="flex justify-center items-center gap-4 mt-6">
+            <button
+              onClick={() => setMode('normal')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                mode === 'normal'
+                  ? 'bg-purple-100 text-purple-700 border border-purple-200 shadow-sm'
+                  : 'bg-white/60 text-black/40 border border-black/[0.06] hover:bg-white hover:text-black/60'
+              }`}
+            >
+              <Zap size={16} className={mode === 'normal' ? 'text-purple-500' : 'text-black/30'} />
+              Normal
+            </button>
+            <button
+              onClick={() => setMode('deep_research')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                mode === 'deep_research'
+                  ? 'bg-blue-100 text-blue-700 border border-blue-200 shadow-sm'
+                  : 'bg-white/60 text-black/40 border border-black/[0.06] hover:bg-white hover:text-black/60'
+              }`}
+              title="Decomposes topic into sub-questions and researches them in parallel for deeper coverage"
+            >
+              <Brain size={16} className={mode === 'deep_research' ? 'text-blue-500' : 'text-black/30'} />
+              Deep Research
+            </button>
+          </div>
 
           {/* Example chips */}
           <div className="space-y-3">

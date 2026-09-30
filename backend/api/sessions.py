@@ -16,6 +16,7 @@ router = APIRouter(prefix="/sessions")
 
 class CreateSessionRequest(BaseModel):
     topic: str
+    mode: str = "normal"
 
 # ── BACKGROUND TASK ───────────────────────────────────────────────────────────
 async def run_research_pipeline(session_id: str, topic: str):
@@ -94,6 +95,156 @@ async def run_research_pipeline(session_id: str, topic: str):
         remove_queue(session_id)
 
 
+async def run_deep_research_pipeline(session_id: str, topic: str):
+    from ..graph.deep_research.builder import build_deep_research_graph
+    graph = build_deep_research_graph()
+    final_report = ""
+    final_sources = []
+    final_stats = {}
+
+    # Node names we care about for SSE events
+    tracked_nodes = {
+        "planner", "research_sub_question", "reflector",
+        "write_section", "merge_report", "verify_report",
+        "deep_judge", "deep_route",
+    }
+
+    try:
+        async for event in graph.astream_events({"topic": topic}, version="v2"):
+            kind = event["event"]
+            name = event["name"]
+
+            # ── Node start events ─────────────────────────────────────────
+            if kind == "on_chain_start" and name in tracked_nodes:
+                await publish_event(session_id, "node_start", {"node": name})
+
+            # ── Node end events ───────────────────────────────────────────
+            elif kind == "on_chain_end":
+                output = event["data"].get("output", {})
+
+                if name == "planner":
+                    await publish_event(session_id, "node_end", {
+                        "node": name,
+                        "data": {
+                            "sub_questions": output.get("sub_questions", []),
+                            "research_round": output.get("research_round", 1),
+                        }
+                    })
+
+                elif name == "research_sub_question":
+                    sub_results = output.get("sub_results", [{}])
+                    sq = sub_results[0].get("sub_question", "") if sub_results else ""
+                    original_sq_id = sub_results[0].get("original_sq_id", sq) if sub_results else sq
+                    empty_reason = sub_results[0].get("empty_reason", "") if sub_results else ""
+                    note_count = len(sub_results[0].get("notes", [])) if sub_results else 0
+                    source_count = len(sub_results[0].get("sources", [])) if sub_results else 0
+                    await publish_event(session_id, "node_end", {
+                        "node": name,
+                        "data": {
+                            "sub_question": sq,
+                            "original_sq_id": original_sq_id,
+                            "empty_reason": empty_reason,
+                            "source_count": source_count,
+                            "note_count": note_count,
+                        }
+                    })
+
+                elif name == "reflector":
+                    gaps_ledger = output.get("gaps", [])
+                    open_gaps = [g["description"] for g in gaps_ledger if g.get("status") == "open"]
+                    followups = output.get("followup_queries", [])
+                    
+                    await publish_event(session_id, "node_end", {
+                        "node": name,
+                        "data": {
+                            "gaps": open_gaps,
+                            "followup_count": len(followups),
+                            "followup_queries": [fq["query"] if isinstance(fq, dict) else fq for fq in followups],
+                            "research_round": output.get("research_round", 1)
+                        }
+                    })
+
+                elif name == "write_section":
+                    drafts = output.get("section_drafts", [{}])
+                    sq = drafts[0].get("sub_question", "") if drafts else ""
+                    wc = drafts[0].get("word_count", 0) if drafts else 0
+                    await publish_event(session_id, "node_end", {
+                        "node": name,
+                        "data": {"sub_question": sq, "word_count": wc}
+                    })
+
+                elif name == "merge_report":
+                    await publish_event(session_id, "node_end", {
+                        "node": name,
+                        "data": output.get("stats", {}),
+                    })
+
+                elif name == "verify_report":
+                    await publish_event(session_id, "node_end", {
+                        "node": name,
+                        "data": output.get("stats", {}),
+                    })
+
+                elif name == "deep_judge":
+                    await publish_event(session_id, "scores", {
+                        "node": name,
+                        "data": output.get("scores", {}),
+                    })
+
+                elif name == "deep_route":
+                    await publish_event(session_id, "progress", {
+                        "node": name,
+                        "data": output,
+                    })
+
+                elif name == "LangGraph":
+                    if output and "report" in output:
+                        final_report = output["report"]
+                        final_sources = output.get("sources", [])
+                        final_stats = output.get("stats", {})
+
+        with get_db() as conn:
+            conn.execute(
+                """INSERT INTO reports (id, session_id, content, word_count)
+                   VALUES (?, ?, ?, ?)""",
+                (str(uuid.uuid4()), session_id, final_report, len(final_report.split()))
+            )
+            for source in final_sources:
+                conn.execute(
+                    """INSERT INTO report_sources
+                       (id, session_id, source_number, url, title, snippet)
+                       VALUES (?, ?, ?, ?, ?, ?)""",
+                    (str(uuid.uuid4()), session_id,
+                     source.get("id", 0), source["url"],
+                     source["title"], source["snippet"])
+                )
+            conn.execute(
+                """UPDATE research_sessions
+                   SET status='completed', completed_at=?
+                   WHERE id=?""",
+                (datetime.now(timezone.utc).isoformat(), session_id)
+            )
+
+        await publish_event(session_id, "complete", {
+            "report": final_report,
+            "sources": final_sources,
+            "stats": final_stats,
+        })
+
+    except Exception as e:
+        logger.error(f"Deep Research Pipeline failed for session {session_id}: {e}", exc_info=True)
+        with get_db() as conn:
+            conn.execute(
+                "UPDATE research_sessions SET status='failed' WHERE id=?",
+                (session_id,)
+            )
+        await publish_event(session_id, "error", {"detail": str(e)})
+
+    finally:
+        await asyncio.sleep(2)
+        remove_queue(session_id)
+
+
 # ── CREATE ────────────────────────────────────────────────────────────────────
 @router.post("", status_code=201)
 async def create_session(body: CreateSessionRequest, background_tasks: BackgroundTasks):
@@ -102,12 +253,15 @@ async def create_session(body: CreateSessionRequest, background_tasks: Backgroun
     # Insert session row immediately so sidebar shows 'running'
     with get_db() as conn:
         conn.execute(
-            "INSERT INTO research_sessions (id, topic, status) VALUES (?, ?, 'running')",
-            (session_id, body.topic)
+            "INSERT INTO research_sessions (id, topic, status, mode) VALUES (?, ?, 'running', ?)",
+            (session_id, body.topic, body.mode)
         )
 
     # Launch background task for graph execution
-    background_tasks.add_task(run_research_pipeline, session_id, body.topic)
+    if body.mode == "deep_research":
+        background_tasks.add_task(run_deep_research_pipeline, session_id, body.topic)
+    else:
+        background_tasks.add_task(run_research_pipeline, session_id, body.topic)
 
     # Return immediately, don't wait for report
     return {"session_id": session_id}
@@ -162,7 +316,7 @@ async def stream_session(session_id: str):
 def list_sessions():
     with get_db() as conn:
         rows = conn.execute(
-            """SELECT id, topic, status, created_at
+            """SELECT id, topic, status, mode, created_at
                FROM research_sessions
                ORDER BY created_at DESC
                LIMIT 50"""

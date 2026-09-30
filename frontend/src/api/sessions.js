@@ -1,10 +1,10 @@
 const BASE = `${import.meta.env.VITE_BACKEND_URL || "http://localhost:8000"}/api`;
 
-export async function createSession(topic) {
+export async function createSession(topic, mode = 'normal') {
   const res = await fetch(`${BASE}/sessions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ topic }),
+    body: JSON.stringify({ topic, mode }),
   });
   if (!res.ok) throw new Error("Failed to create session");
   return res.json(); // { session_id }

@@ -9,7 +9,7 @@ validates at import-time so the app fails fast on missing keys.
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 from pathlib import Path
-
+import os
 
 class Settings(BaseSettings):
     """Application settings loaded from environment / .env file."""
@@ -49,6 +49,17 @@ class Settings(BaseSettings):
     max_iterations: int = 3
     judge_threshold: float = 0.7
     extract_max_chars: int = 3000
+
+    # ── Deep Research tunables ────────────────────────────────────────────
+    deep_max_research_rounds: int = int(os.environ.get("DEEP_MAX_ROUNDS", "2"))
+    deep_max_results_per_query: int = 5
+    deep_max_domains_per_source: int = 2
+    deep_notes_per_source: int = 5
+    deep_judge_threshold: float = 0.7
+    deep_max_revisions: int = 2
+    deep_max_sources_total: int = int(os.environ.get("DEEP_MAX_SOURCES", "15"))
+    deep_target_claims_per_sq: int = 3
+    deep_dev_mode: bool = os.environ.get("DEV_MODE", "false").lower() == "true"
 
 
 @lru_cache()

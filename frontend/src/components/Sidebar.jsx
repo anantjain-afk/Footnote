@@ -1,5 +1,5 @@
 import React from "react";
-import { Trash2, Loader2, Plus, Sparkles, PanelLeft, PanelLeftClose, SquarePen } from "lucide-react";
+import { Trash2, Loader2, Plus, Sparkles, PanelLeft, PanelLeftClose, SquarePen, Zap, Brain } from "lucide-react";
 
 // Removed StatusBadge component per user request
 
@@ -136,9 +136,21 @@ export function Sidebar({
                   <Trash2 size={14} />
                 </button>
               </div>
-              <span className={`text-[11px] mt-0.5 ${activeSessionId === session.id ? 'text-black/50' : 'text-black/40'}`}>
-                {formatDate(session.created_at)}
-              </span>
+              <div className="flex items-center justify-between mt-1">
+                <span className={`text-[11px] ${activeSessionId === session.id ? 'text-black/50' : 'text-black/40'}`}>
+                  {formatDate(session.created_at)}
+                </span>
+                
+                {session.mode === 'deep_research' ? (
+                  <span className="flex items-center gap-1 text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-600">
+                    <Brain size={10} /> Deep
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-md bg-zinc-100 text-zinc-500">
+                    <Zap size={10} /> Normal
+                  </span>
+                )}
+              </div>
             </div>
           ))
         )}

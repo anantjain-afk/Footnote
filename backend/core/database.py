@@ -33,6 +33,7 @@ def init_db():
                 id           TEXT PRIMARY KEY,
                 topic        TEXT NOT NULL,
                 status       TEXT DEFAULT 'running',
+                mode         TEXT DEFAULT 'normal',
                 created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
                 completed_at DATETIME
             );

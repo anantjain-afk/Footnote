@@ -14,9 +14,9 @@ logger = get_logger(__name__)
     retry=retry_if_exception_type(Exception),
     reraise=True,
 )
-def _search_with_retry(topic: str):
+def _search_with_retry(topic: str, max_results: int = 5):
     """Tavily search with exponential backoff retry."""
-    return tavilyClient.search(topic)
+    return tavilyClient.search(topic, max_results=max_results)
 
 
 async def search(state: State) -> dict:
