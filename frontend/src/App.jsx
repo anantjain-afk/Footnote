@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import LandingView from './components/LandingView'
 import LoadingView from './components/LoadingView'
 import DeepResearchLoadingView from './components/DeepResearchLoadingView'
@@ -11,6 +11,7 @@ import { createSession, getSession } from './api/sessions'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from './context/useAuth'
 import Login from './components/Login'
+import { useQuotaCooldowns } from './hooks/useQuotaCooldowns'
 
 function App() {
   const { user, loading } = useAuth()
@@ -23,6 +24,9 @@ function App() {
 
 function AuthenticatedApp() {
   const { user, signOut } = useAuth()
+  const quotas = useQuotaCooldowns()
+  const researchPending = useRef(false)
+  const [errorStatus, setErrorStatus] = useState(null)
   const [signingOut, setSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState(null)
   const [view, setView] = useState('landing') // 'landing' | 'loading' | 'report' | 'error' | 'session_loading'
@@ -66,6 +70,9 @@ function AuthenticatedApp() {
   })
 
   const handleResearch = async (searchTopic, searchMode = 'normal') => {
+    if (researchPending.current || quotas.reports > 0) return
+    researchPending.current = true
+    setErrorStatus(null)
     setTopic(searchTopic)
     setMode(searchMode)
     setView('loading')
@@ -85,9 +92,13 @@ function AuthenticatedApp() {
       }
     } catch (err) {
       console.error('Research error:', err);
+      quotas.record('reports', err);
+      setErrorStatus(err.status);
       setErrorMsg(err.message || 'Failed to establish connection to the research pipeline.');
       setView('error');
       refresh(); // Refresh to show 'failed' state in sidebar
+    } finally {
+      researchPending.current = false;
     }
   }
 
@@ -104,6 +115,7 @@ function AuthenticatedApp() {
   }
 
   const handleSelectSession = async (sessionId) => {
+    setErrorStatus(null)
 
     setActiveSessionId(sessionId);
     setView('session_loading');
@@ -132,6 +144,7 @@ function AuthenticatedApp() {
   };
 
   const handleReset = () => {
+    setErrorStatus(null)
     setView('landing')
     setActiveSessionId(null)
     setTopic('')
@@ -147,7 +160,7 @@ function AuthenticatedApp() {
 
   const handleRetry = () => {
     if (topic) {
-      handleResearch(topic)
+      handleResearch(topic, mode)
     } else {
       handleReset()
     }
@@ -176,6 +189,9 @@ function AuthenticatedApp() {
       <main className="flex-1 h-full overflow-y-auto relative">
         {view === 'landing' && (
           <LandingView 
+            cooldownSeconds={quotas.reports}
+            initialTopic={topic}
+            initialMode={mode}
             onSubmit={handleResearch} 
             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
             isSidebarOpen={isSidebarOpen}
@@ -211,6 +227,9 @@ function AuthenticatedApp() {
         
         {view === 'report' && (
           <ReportChatView 
+            key={activeSessionId}
+            cooldownSeconds={quotas.chat}
+            onQuotaError={(error) => quotas.record('chat', error)}
             sessionId={activeSessionId}
             topic={topic} 
             initialReport={reportData} 
@@ -225,9 +244,11 @@ function AuthenticatedApp() {
         {view === 'error' && (
           <ErrorView 
             topic={topic} 
-            errorMsg={errorMsg} 
+            errorMsg={errorMsg}
+            errorStatus={errorStatus}
+            cooldownSeconds={quotas.reports}
             onRetry={handleRetry} 
-            onReset={handleReset} 
+            onReset={() => setView('landing')}
           />
         )}
 

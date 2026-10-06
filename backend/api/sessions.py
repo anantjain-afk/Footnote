@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 import asyncio
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
+from fastapi import Request, APIRouter, HTTPException, BackgroundTasks, Depends
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 import asyncpg
@@ -252,10 +252,12 @@ async def run_deep_research_pipeline(session_id: str, topic: str):
 
 
 from ..core.auth import User, get_current_user
+from ..core.rate_limit import get_rate_limiter
 
 # ── CREATE ────────────────────────────────────────────────────────────────────
 @router.post("", status_code=201)
-async def create_session(body: CreateSessionRequest, background_tasks: BackgroundTasks, user: User = Depends(get_current_user), db: asyncpg.Connection = Depends(get_db)):
+async def create_session(request: Request, body: CreateSessionRequest, background_tasks: BackgroundTasks, user: User = Depends(get_current_user), db: asyncpg.Connection = Depends(get_db)):
+    await get_rate_limiter(request).consume(user.id, "reports")
     session_id = str(uuid.uuid4())
 
     # Insert session row immediately so sidebar shows 'running'

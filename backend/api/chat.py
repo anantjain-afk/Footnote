@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import Request, APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from sse_starlette.sse import EventSourceResponse
@@ -83,11 +83,12 @@ def rows_to_messages(rows: list[dict]) -> list[BaseMessage]:
 
 
 from ..core.auth import User, get_current_user
+from ..core.rate_limit import get_rate_limiter
 
 # ── POST /sessions/{session_id}/chat ─────────────────────────────────────────
 
 @router.post("")
-async def chat(session_id: str, body: ChatRequest, user: User = Depends(get_current_user), db: asyncpg.Connection = Depends(get_db)):
+async def chat(request: Request, session_id: str, body: ChatRequest, user: User = Depends(get_current_user), db: asyncpg.Connection = Depends(get_db)):
 
     # 1. validate session exists and is completed
     session = await db.fetchrow(
@@ -108,6 +109,7 @@ async def chat(session_id: str, body: ChatRequest, user: User = Depends(get_curr
 
     # 2. load report and history from DB — bridge between graphs
     report = await get_report_for_session(db, session_id)
+    await get_rate_limiter(request).consume(user.id, "chat")
     history_rows = await get_chat_history_from_db(db, session_id)
 
     # 3. deserialize history + append current user message
@@ -154,7 +156,7 @@ async def chat(session_id: str, body: ChatRequest, user: User = Depends(get_curr
 # ── POST /sessions/{session_id}/chat/stream ──────────────────────────────────
 
 @router.post("/stream")
-async def chat_stream(session_id: str, body: ChatRequest, user: User = Depends(get_current_user), db: asyncpg.Connection = Depends(get_db)):
+async def chat_stream(request: Request, session_id: str, body: ChatRequest, user: User = Depends(get_current_user), db: asyncpg.Connection = Depends(get_db)):
     # 1. validate session exists and is completed
     session = await db.fetchrow(
         "SELECT id, status FROM research_sessions WHERE id=$1 AND user_id=$2",
@@ -171,6 +173,7 @@ async def chat_stream(session_id: str, body: ChatRequest, user: User = Depends(g
 
     # 2. load report and history from DB
     report = await get_report_for_session(db, session_id)
+    await get_rate_limiter(request).consume(user.id, "chat")
     history_rows = await get_chat_history_from_db(db, session_id)
 
     # 3. deserialize history + append current user message

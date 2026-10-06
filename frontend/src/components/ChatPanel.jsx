@@ -4,6 +4,8 @@ import ChatInput from './ChatInput'
 import { X, Sparkles } from 'lucide-react'
 
 export function ChatPanel({
+  notice,
+  submitDisabled,
   messages,
   streamingMessage,
   isStreaming,
@@ -70,6 +72,8 @@ export function ChatPanel({
       {/* Input area fixed to the bottom */}
       <div className="p-4 border-t border-black/5 bg-white pb-6">
         <ChatInput
+          notice={notice}
+          submitDisabled={submitDisabled}
           value={inputValue}
           onChange={onInputChange}
           onSubmit={onSend}

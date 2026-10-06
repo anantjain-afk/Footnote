@@ -1,6 +1,8 @@
 import { Send, Loader2 } from 'lucide-react'
 
 export function ChatInput({
+  notice,
+  submitDisabled = false,
   value,
   onChange,
   onSubmit,
@@ -11,7 +13,7 @@ export function ChatInput({
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      if (value.trim() && !isLoading) {
+      if (value.trim() && !isLoading && !submitDisabled) {
         onSubmit()
       }
     }
@@ -19,6 +21,7 @@ export function ChatInput({
 
   return (
     <div className="w-full flex flex-col space-y-2">
+      {notice && <p role="status" className="text-sm text-black/70 px-4">{notice}</p>}
       {/* Optional hint text shown above input in View 1 */}
       {/* {showHint && (
         <p className="text-center text-xs text-black/40 font-mono tracking-wide leading-none mb-2 pt-2">
@@ -44,7 +47,8 @@ export function ChatInput({
         {/* Send / Spinner Button */}
         <button
           onClick={onSubmit}
-          disabled={!value.trim() || isLoading}
+          disabled={!value.trim() || isLoading || submitDisabled}
+          aria-label="Send message"
           className="shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-black hover:bg-black/80 disabled:bg-black/10 disabled:text-black/30 text-white font-semibold transition-all duration-200 hover:scale-[1.05] active:scale-[0.95] cursor-pointer mb-1 mr-1"
         >
           {isLoading ? (

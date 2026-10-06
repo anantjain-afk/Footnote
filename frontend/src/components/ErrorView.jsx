@@ -1,6 +1,7 @@
+import { cooldownMessage } from '../hooks/useQuotaCooldowns'
 import React from 'react'
 
-export default function ErrorView({ topic, errorMsg, onRetry, onReset }) {
+export default function ErrorView({ topic, errorMsg, onRetry, onReset, errorStatus, cooldownSeconds = 0 }) {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center px-4 relative bg-[#030303]">
       {/* Background ambient glows */}
@@ -17,15 +18,15 @@ export default function ErrorView({ topic, errorMsg, onRetry, onReset }) {
         {/* Header */}
         <div className="space-y-2">
           <h2 className="text-2xl font-bold tracking-tight text-white">
-            Research Failed
+            {errorStatus === 429 ? 'Report limit reached' : errorStatus === 503 ? 'Temporarily unavailable' : 'Research Failed'}
           </h2>
           <p className="text-zinc-400 text-sm">
-            We encountered an unexpected error while retrieving or formatting the research report.
+            {errorStatus === 429 ? 'Your report allowance will become available as earlier requests leave the hourly window.' : errorStatus === 503 ? 'Please try again shortly. You can still read your saved reports.' : 'We encountered an unexpected error while retrieving or formatting the research report.'}
           </p>
         </div>
 
         {/* Failed Topic and Detail Box */}
-        <div className="glass-panel rounded-2xl p-5 space-y-4 border border-red-500/10 text-left">
+        <div className="bg-zinc-900 rounded-2xl p-5 space-y-4 border border-red-500/10 text-left">
           <div>
             <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 block mb-1">
               Target Topic
@@ -39,8 +40,8 @@ export default function ErrorView({ topic, errorMsg, onRetry, onReset }) {
             <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 block mb-1">
               Error Details
             </span>
-            <p className="text-xs text-red-400 font-mono leading-relaxed bg-red-950/20 p-3 rounded-lg border border-red-950/30 break-words">
-              {errorMsg || "Network Error: Failed to connect to http://localhost:8000"}
+            <p role="alert" className="text-xs text-red-400 font-mono leading-relaxed bg-red-950/20 p-3 rounded-lg border border-red-950/30 break-words">
+              {errorStatus === 429 ? (cooldownSeconds > 0 ? cooldownMessage(cooldownSeconds) : 'You can try generating your report again.') : errorMsg || 'Unable to connect. Please try again.'}
             </p>
           </div>
         </div>
@@ -50,9 +51,10 @@ export default function ErrorView({ topic, errorMsg, onRetry, onReset }) {
           <button
             id="retry-research-button"
             onClick={onRetry}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_15px_rgba(239,68,68,0.2)]"
+            disabled={cooldownSeconds > 0}
+            className="disabled:opacity-60 disabled:cursor-not-allowed w-full sm:w-auto px-6 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_15px_rgba(239,68,68,0.2)]"
           >
-            Try Again
+            {cooldownSeconds > 0 ? cooldownMessage(cooldownSeconds) : 'Try Again'}
           </button>
           
           <button

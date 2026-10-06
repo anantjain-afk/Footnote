@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { cooldownMessage } from '../hooks/useQuotaCooldowns'
+import { useState, useEffect, useRef } from 'react'
 import ReportPanel from './ReportPanel'
 import ChatPanel from './ChatPanel'
 import ChatInput from './ChatInput'
@@ -7,6 +8,8 @@ import { exportReportPDF } from '../api/research'
 import { useChatStream } from '../hooks/useChatStream'
 
 export function ReportChatView({
+  cooldownSeconds = 0,
+  onQuotaError,
   sessionId,
   topic,
   initialReport,
@@ -16,6 +19,9 @@ export function ReportChatView({
   onToggleSidebar,
   isSidebarOpen
 }) {
+  const pending = useRef(false)
+  const [chatError, setChatError] = useState(null)
+  const chatNotice = cooldownSeconds > 0 ? `Chat limit reached. ${cooldownMessage(cooldownSeconds)}` : chatError?.status === 429 ? 'You can try sending your message again.' : chatError?.message
   const [report, setReport] = useState(initialReport)
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -71,40 +77,33 @@ export function ReportChatView({
   }
 
   const handleSend = async (messageText) => {
-    if (!messageText.trim()) return
-
-    // 1. open split view if not already open
+    if (!messageText.trim() || pending.current || cooldownSeconds > 0) return
+    pending.current = true
+    setChatError(null)
     setIsChatOpen(true)
-
-    // 2. optimistically add user message to UI
-    setMessages(prev => [...prev, { role: "user", content: messageText }])
-    setInputValue("")
-
-    // 3. if IMPROVE intent suspected, show report overlay
+    const optimisticMessage = { role: 'user', content: messageText }
+    setMessages(prev => [...prev, optimisticMessage])
+    setInputValue('')
     setIsLoading(true)
     if (mightBeImproveIntent(messageText)) setIsUpdatingReport(true)
-
-    // 4. Start streaming chat
-    sendChatStream(messageText, ({ intent, updated_report, finalMessage }) => {
-      // 5. Stream complete, commit to messages array
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: finalMessage || "I encountered an error or received no response.",
-        intent: intent
-      }])
-
-      // 6. if IMPROVE, update report panel
-      if (intent === "IMPROVE" && updated_report) {
+    try {
+      const { intent, updated_report, finalMessage } = await sendChatStream(messageText)
+      setMessages(prev => [...prev, { role: 'assistant', content: finalMessage, intent }])
+      if (intent === 'IMPROVE' && updated_report) {
         setReport(updated_report)
-        // Show success toast for 2 seconds
         setShowToast(true)
         setTimeout(() => setShowToast(false), 2000)
       }
-
-      // 7. clear loading states
+    } catch (error) {
+      onQuotaError?.(error)
+      setChatError(error)
+      setMessages(prev => prev.filter(message => message !== optimisticMessage))
+      setInputValue(messageText)
+    } finally {
+      pending.current = false
       setIsLoading(false)
       setIsUpdatingReport(false)
-    })
+    }
   }
 
   const handleExportPdf = async () => {
@@ -149,6 +148,8 @@ export function ReportChatView({
           </div>
           <div className="w-[40%] h-full">
             <ChatPanel
+              notice={chatNotice}
+              submitDisabled={cooldownSeconds > 0}
               messages={messages}
               streamingMessage={streamingMessage}
               isStreaming={isStreaming}
@@ -182,6 +183,8 @@ export function ReportChatView({
           <div className="absolute bottom-6 left-0 right-0 z-10 flex justify-center pointer-events-none">
   <div className="relative w-full max-w-2xl pointer-events-auto">
     <ChatInput
+      notice={chatNotice}
+      submitDisabled={cooldownSeconds > 0}
       value={inputValue}
       onChange={setInputValue}
       onSubmit={() => handleSend(inputValue)}

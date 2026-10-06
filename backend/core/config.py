@@ -7,6 +7,7 @@ validates at import-time so the app fails fast on missing keys.
 """
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
 from functools import lru_cache
 from pathlib import Path
 import os
@@ -44,6 +45,13 @@ class Settings(BaseSettings):
     database_url: str = ""
     supabase_url: str = ""
     supabase_jwt_secret: str = ""
+
+    # Shared rolling quotas. An unset URL fails closed only for paid operations.
+    redis_url: str = ""
+    rate_limit_key_prefix: str = "research-agent:local"
+    rate_limit_reports: int = Field(default=10, gt=0)
+    rate_limit_chat: int = Field(default=30, gt=0)
+    rate_limit_window_seconds: int = Field(default=3600, gt=0)
 
     # ── Research pipeline tunables ────────────────────────────────────────
     max_iterations: int = 3

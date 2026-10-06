@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import Request, APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from ..graph.research.builder import graph
 import uuid
@@ -13,10 +13,12 @@ class ReportRequest(BaseModel):
     topic : str
 
 from ..core.auth import User, get_current_user
+from ..core.rate_limit import get_rate_limiter
 
 @router.post('/report')
-async def create_report(request: ReportRequest, user: User = Depends(get_current_user)):
+async def create_report(http_request: Request, request: ReportRequest, user: User = Depends(get_current_user)):
 
+    await get_rate_limiter(http_request).consume(user.id, "reports")
     result = await graph.ainvoke({
         "topic": request.topic,
         

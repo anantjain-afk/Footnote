@@ -1,4 +1,5 @@
 import { supabase, authConfigurationError } from '../lib/supabase';
+import { responseError } from './apiError';
 
 export async function getAuthHeaders() {
   if (!supabase) throw new Error(authConfigurationError);
@@ -20,8 +21,8 @@ export async function fetchWithAuth(url, options = {}) {
   Object.entries(headers).forEach(([name, value]) => mergedHeaders.set(name, value));
   const response = await fetch(url, { ...options, headers: mergedHeaders });
   if (response.status === 401) {
-    const body = await response.clone().json().catch(() => ({}));
-    throw new Error(body.detail || 'Your session could not be verified. Please sign in again.');
+    throw await responseError(response, 'Your session could not be verified. Please sign in again.');
   }
+  if (response.status === 429 || response.status === 503) throw await responseError(response);
   return response;
 }

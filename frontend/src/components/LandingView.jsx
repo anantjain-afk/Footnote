@@ -1,9 +1,10 @@
+import { cooldownMessage } from '../hooks/useQuotaCooldowns'
 import React, { useState, useEffect, useRef } from 'react'
 import { Menu, Search, Sparkles, Zap, BookOpen, Shield, Brain, ArrowRight, CheckCircle2, Globe, FileText, BarChart3, RefreshCw, Clock, GraduationCap, Lightbulb, Target, Layers, ChevronRight, Star, Play } from 'lucide-react'
 
-export default function LandingView({ onSubmit, onToggleSidebar, isSidebarOpen }) {
-  const [topic, setTopic] = useState('')
-  const [mode, setMode] = useState('normal')
+export default function LandingView({ onSubmit, onToggleSidebar, isSidebarOpen, cooldownSeconds = 0, initialTopic = '', initialMode = 'normal' }) {
+  const [topic, setTopic] = useState(initialTopic)
+  const [mode, setMode] = useState(initialMode)
   const [activeFeature, setActiveFeature] = useState(0)
   const [demoStep, setDemoStep] = useState(0)
   const [demoRunning, setDemoRunning] = useState(false)
@@ -12,7 +13,7 @@ export default function LandingView({ onSubmit, onToggleSidebar, isSidebarOpen }
 
   const handleFormSubmit = (e) => {
     e.preventDefault()
-    if (topic.trim()) {
+    if (topic.trim() && cooldownSeconds === 0) {
       onSubmit(topic.trim(), mode)
     }
   }
@@ -209,7 +210,7 @@ export default function LandingView({ onSubmit, onToggleSidebar, isSidebarOpen }
                 <button
                   id="generate-report-button"
                   type="submit"
-                  disabled={!topic.trim()}
+                  disabled={!topic.trim() || cooldownSeconds > 0}
                   className="mr-2.5 px-7 py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 disabled:from-black/15 disabled:to-black/10 disabled:text-black/30 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg hover:shadow-purple-300/30 active:scale-[0.97] cursor-pointer flex items-center gap-2"
                 >
                   Generate
@@ -217,6 +218,7 @@ export default function LandingView({ onSubmit, onToggleSidebar, isSidebarOpen }
                 </button>
               </div>
             </div>
+            {cooldownSeconds > 0 && <p role="status" className="mt-3 text-sm text-black/70">Report limit reached. {cooldownMessage(cooldownSeconds)}</p>}
           </form>
 
           {/* Mode Selector */}

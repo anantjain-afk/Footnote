@@ -1,100 +1,48 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { fetchWithAuth } from '../api/authFetch';
+import { responseError } from '../api/apiError';
+import { readEventStream } from '../api/eventStream';
 
 const BASE = `${import.meta.env.VITE_BACKEND_URL || "http://localhost:8000"}/api`;
 
 export function useChatStream(sessionId) {
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const pending = useRef(false);
 
-  const send = async (message, onComplete) => {
+  const send = async (message) => {
+    if (pending.current) throw new Error('A message is already being sent.');
+    pending.current = true;
     setIsStreaming(true);
     setStreamingMessage('');
-
     try {
       const response = await fetchWithAuth(`${BASE}/sessions/${sessionId}/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message }),
       });
-
-      if (!response.ok) throw new Error('Failed to send message');
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let finalIntent = null;
-      let finalReport = null;
-      let accumulatedMessage = '';
-
-      while (true) {
-        const { value, done } = await reader.read();
-        
-        if (value) {
-          buffer += decoder.decode(value, { stream: true });
+      if (!response.ok) throw await responseError(response, 'Failed to send message');
+      let accumulated = '';
+      let result = null;
+      await readEventStream(response, (type, data) => {
+        if (type === 'error') throw new Error(data.detail || 'Chat failed. Please try again.');
+        if (type === 'token') {
+          accumulated += data.content;
+          setStreamingMessage(accumulated);
         }
-        
-        // Process complete events separated by double newlines
-        const parts = buffer.split(/\r?\n\r?\n/);
-        // The last part is either incomplete or empty, keep it in buffer
-        buffer = parts.pop() || '';
-        
-        // If the stream is done, also process whatever is left in the buffer
-        if (done && buffer.trim()) {
-          parts.push(buffer);
-          buffer = '';
+        if (type === 'done') {
+          result = { intent: data.intent, updated_report: data.updated_report,
+            finalMessage: data.response || accumulated };
+          return false;
         }
-        
-        for (const part of parts) {
-          if (!part.trim()) continue;
-          
-          const lines = part.split(/\r?\n/);
-          let eventType = 'message';
-          let dataStr = '';
-          
-          for (const line of lines) {
-            if (line.startsWith('event:')) {
-              eventType = line.slice(6).trim();
-            } else if (line.startsWith('data:')) {
-              dataStr = line.slice(5).trim();
-            }
-          }
-          
-          if (dataStr) {
-            try {
-              const data = JSON.parse(dataStr);
-              if (eventType === 'token') {
-                accumulatedMessage += data.content;
-                setStreamingMessage(accumulatedMessage);
-              } else if (eventType === 'done') {
-                finalIntent = data.intent;
-                if (data.updated_report) finalReport = data.updated_report;
-                if (data.response && !accumulatedMessage) {
-                  accumulatedMessage = data.response;
-                  setStreamingMessage(accumulatedMessage);
-                }
-              } else if (eventType === 'error') {
-                console.error("Chat error:", data.detail);
-              }
-            } catch (e) {
-              console.error("Failed to parse SSE data", e, "Raw data:", dataStr);
-            }
-          }
-        }
-        
-        if (done) break;
-      }
-      
-      if (onComplete) {
-        onComplete({ intent: finalIntent, updated_report: finalReport, finalMessage: accumulatedMessage });
-      }
-    } catch (err) {
-      console.error('Stream failed:', err);
+      });
+      if (!result) throw new Error('The connection ended before the reply finished. Please try again.');
+      return result;
     } finally {
+      pending.current = false;
       setIsStreaming(false);
       setStreamingMessage('');
     }
   };
-
   return { streamingMessage, isStreaming, send };
 }
