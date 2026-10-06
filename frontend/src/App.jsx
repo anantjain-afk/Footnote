@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import LandingView from './components/LandingView'
 import LoadingView from './components/LoadingView'
 import DeepResearchLoadingView from './components/DeepResearchLoadingView'
@@ -9,8 +9,22 @@ import { useSessionHistory } from './hooks/useSessionHistory'
 import { useResearchStream } from './hooks/useResearchStream'
 import { createSession, getSession } from './api/sessions'
 import { Loader2 } from 'lucide-react'
+import { useAuth } from './context/useAuth'
+import Login from './components/Login'
 
 function App() {
+  const { user, loading } = useAuth()
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center" role="status">Restoring your session…</div>
+  }
+  if (!user) return <Login />
+  return <AuthenticatedApp key={user.id} />
+}
+
+function AuthenticatedApp() {
+  const { user, signOut } = useAuth()
+  const [signingOut, setSigningOut] = useState(false)
+  const [signOutError, setSignOutError] = useState(null)
   const [view, setView] = useState('landing') // 'landing' | 'loading' | 'report' | 'error' | 'session_loading'
   const [mode, setMode] = useState('normal')
   const [activeSessionId, setActiveSessionId] = useState(null)
@@ -21,17 +35,13 @@ function App() {
   const [errorMsg, setErrorMsg] = useState('')
   const [generatedAt, setGeneratedAt] = useState('')
 
-  const { sessions, loading: loadingSessions, refresh, removeSession } = useSessionHistory()
+  const { sessions, loading: loadingSessions, error: historyError, refresh, removeSession } = useSessionHistory()
 
   // SSE Hook for real-time progress
   const { 
     events, 
     currentNode, 
     scores, 
-    isComplete, 
-    report: streamedReport, 
-    sources: streamedSources,
-    error: streamError, 
     iterations,
     subQuestions,
     subQuestionProgress,
@@ -40,27 +50,20 @@ function App() {
     sectionProgress,
     stats,
     verifiedPct
-  } = useResearchStream(view === 'loading' ? activeSessionId : null)
-
-  // React to SSE completion
-  useEffect(() => {
-    if (view === 'loading' && isComplete && streamedReport) {
-      setReportData(streamedReport)
-      setSources(streamedSources || [])
+  } = useResearchStream(view === 'loading' ? activeSessionId : null, {
+    onComplete: (data) => {
+      setReportData(data.report || '')
+      setSources(data.sources || [])
       setGeneratedAt(new Date().toISOString())
       setView('report')
       refresh()
-    }
-  }, [isComplete, streamedReport, view, refresh])
-
-  // React to SSE error
-  useEffect(() => {
-    if (view === 'loading' && streamError) {
-      setErrorMsg(streamError)
+    },
+    onError: (message) => {
+      setErrorMsg(message)
       setView('error')
       refresh()
-    }
-  }, [streamError, view, refresh])
+    },
+  })
 
   const handleResearch = async (searchTopic, searchMode = 'normal') => {
     setTopic(searchTopic)
@@ -85,6 +88,18 @@ function App() {
       setErrorMsg(err.message || 'Failed to establish connection to the research pipeline.');
       setView('error');
       refresh(); // Refresh to show 'failed' state in sidebar
+    }
+  }
+
+  const handleSignOut = async () => {
+    setSigningOut(true)
+    setSignOutError(null)
+    try {
+      await signOut()
+    } catch {
+      setSignOutError('Unable to sign out. Please try again.')
+    } finally {
+      setSigningOut(false)
     }
   }
 
@@ -145,11 +160,17 @@ function App() {
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
         sessions={sessions}
         loading={loadingSessions}
+        historyError={historyError}
+        onRetryHistory={refresh}
         activeSessionId={activeSessionId}
         onSelectSession={handleSelectSession}
         onRemoveSession={handleRemoveActive}
         onDeleteSession={removeSession}
         onNewResearch={handleReset}
+        email={user.email}
+        onSignOut={handleSignOut}
+        signingOut={signingOut}
+        signOutError={signOutError}
       />
 
       <main className="flex-1 h-full overflow-y-auto relative">

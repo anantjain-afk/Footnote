@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from ..graph.research.builder import graph
 import uuid
@@ -12,8 +12,10 @@ router = APIRouter()
 class ReportRequest(BaseModel):
     topic : str
 
+from ..core.auth import User, get_current_user
+
 @router.post('/report')
-async def create_report(request: ReportRequest):
+async def create_report(request: ReportRequest, user: User = Depends(get_current_user)):
 
     result = await graph.ainvoke({
         "topic": request.topic,
@@ -29,7 +31,7 @@ class ExportRequest(BaseModel):
     sources: list[dict] = []
 
 @router.post("/report/export")
-async def export_pdf(body: ExportRequest):
+async def export_pdf(body: ExportRequest, user: User = Depends(get_current_user)):
     # use /tmp so you don't accumulate PDFs on disk
     filename = f"report_{uuid.uuid4().hex[:8]}.pdf"
     output_path = f"/tmp/{filename}"

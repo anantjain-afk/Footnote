@@ -10,7 +10,7 @@ from .nodes.verifier import verify_report
 from .nodes.deep_judge import deep_judge, deep_route, should_continue_deep
 
 
-def build_deep_research_graph() -> StateGraph:
+def build_deep_research_graph(checkpointer=None) -> StateGraph:
     """Build the deep research graph.
 
     Flow:
@@ -62,4 +62,4 @@ def build_deep_research_graph() -> StateGraph:
         {"finish": END, "revise": "merge_report"},
     )
 
-    return builder.compile()
+    return builder.compile(checkpointer=checkpointer)

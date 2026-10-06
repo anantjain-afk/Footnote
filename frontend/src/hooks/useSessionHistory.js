@@ -4,16 +4,18 @@ import { listSessions, deleteSession } from "../api/sessions";
 export function useSessionHistory() {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const fetchSessions = useCallback(async () => {
-    try {
-      const data = await listSessions();
+  const fetchSessions = useCallback(() => {
+    return listSessions().then((data) => {
       setSessions(data);
-    } catch (err) {
+      setError(null);
+    }).catch((err) => {
       console.error("Failed to load sessions:", err);
-    } finally {
+      setError(err.message || 'Unable to load your history.');
+    }).finally(() => {
       setLoading(false);
-    }
+    });
   }, []);
 
   const removeSession = useCallback(async (id) => {
@@ -32,5 +34,5 @@ export function useSessionHistory() {
     fetchSessions();
   }, [fetchSessions]);
 
-  return { sessions, loading, refresh, removeSession };
+  return { sessions, loading, error, refresh, removeSession };
 }

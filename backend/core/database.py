@@ -1,76 +1,47 @@
-import sqlite3
-from contextlib import contextmanager
+import asyncpg
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 from .config import settings
 from .logging import get_logger
 
 logger = get_logger(__name__)
 
+pool: asyncpg.Pool = None
 
-def get_connection():
-    conn = sqlite3.connect(settings.db_path, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=ON")
-    return conn
-
-@contextmanager
-def get_db():
-    conn = get_connection()
+async def init_db_pool():
+    global pool
+    logger.info("Initializing Postgres connection pool...")
     try:
-        yield conn
-        conn.commit()
-    except Exception:
-        conn.rollback()
+        pool = await asyncpg.create_pool(
+            settings.database_url,
+            min_size=5,
+            max_size=20,
+            command_timeout=60,
+        )
+        logger.info("Postgres connection pool initialized.", extra={"node": "startup"})
+    except Exception as e:
+        logger.error(f"Failed to initialize Postgres pool: {e}", extra={"node": "startup"})
         raise
-    finally:
-        conn.close()
 
-def init_db():
-    with get_db() as conn:
-        conn.executescript("""
-            -- existing tables ...
-            CREATE TABLE IF NOT EXISTS research_sessions (
-                id           TEXT PRIMARY KEY,
-                topic        TEXT NOT NULL,
-                status       TEXT DEFAULT 'running',
-                mode         TEXT DEFAULT 'normal',
-                created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
-                completed_at DATETIME
-            );
+async def close_db_pool():
+    global pool
+    if pool:
+        await pool.close()
+        logger.info("Postgres connection pool closed.", extra={"node": "shutdown"})
 
-            CREATE TABLE IF NOT EXISTS reports (
-                id          TEXT PRIMARY KEY,
-                session_id  TEXT NOT NULL REFERENCES research_sessions(id),
-                content     TEXT NOT NULL,
-                word_count  INTEGER,
-                created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
+async def get_db() -> AsyncGenerator[asyncpg.Connection, None]:
+    async with get_pool().acquire() as connection:
+        yield connection
 
-            CREATE TABLE IF NOT EXISTS chat_messages (
-                id          TEXT PRIMARY KEY,
-                session_id  TEXT NOT NULL REFERENCES research_sessions(id),
-                role        TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
-                content     TEXT NOT NULL,
-                created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
+def get_pool() -> asyncpg.Pool:
+    if pool is None:
+        raise RuntimeError("Database pool is not initialized")
+    return pool
 
-            CREATE TABLE IF NOT EXISTS report_sources (
-                id            TEXT PRIMARY KEY,
-                session_id    TEXT NOT NULL REFERENCES research_sessions(id),
-                source_number INTEGER NOT NULL,
-                url           TEXT NOT NULL,
-                title         TEXT,
-                snippet       TEXT,
-                created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE INDEX IF NOT EXISTS idx_sessions_created
-                ON research_sessions(created_at DESC);
-            CREATE INDEX IF NOT EXISTS idx_reports_session
-                ON reports(session_id);
-            CREATE INDEX IF NOT EXISTS idx_chat_session
-                ON chat_messages(session_id, created_at ASC);
-            CREATE INDEX IF NOT EXISTS idx_sources_session
-                ON report_sources(session_id, source_number ASC);
-        """)
-    logger.info("Database initialized", extra={"node": "startup"})
+@asynccontextmanager
+async def get_checkpointer():
+    # LangGraph requires a psycopg connection, not the asyncpg application pool.
+    from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+    async with AsyncPostgresSaver.from_conn_string(settings.database_url) as checkpointer:
+        await checkpointer.setup()
+        yield checkpointer

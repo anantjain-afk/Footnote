@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { fetchWithAuth } from '../api/authFetch';
 
 const BASE = `${import.meta.env.VITE_BACKEND_URL || "http://localhost:8000"}/api`;
 
@@ -11,7 +12,7 @@ export function useChatStream(sessionId) {
     setStreamingMessage('');
 
     try {
-      const response = await fetch(`${BASE}/sessions/${sessionId}/chat/stream`, {
+      const response = await fetchWithAuth(`${BASE}/sessions/${sessionId}/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message }),

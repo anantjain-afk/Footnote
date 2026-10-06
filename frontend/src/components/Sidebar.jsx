@@ -1,5 +1,4 @@
-import React from "react";
-import { Trash2, Loader2, Plus, Sparkles, PanelLeft, PanelLeftClose, SquarePen, Zap, Brain } from "lucide-react";
+import { Trash2, Loader2, PanelLeft, PanelLeftClose, SquarePen, Zap, Brain } from "lucide-react";
 
 // Removed StatusBadge component per user request
 
@@ -27,11 +26,17 @@ export function Sidebar({
   onToggle,
   sessions,
   loading,
+  historyError,
+  onRetryHistory,
   activeSessionId,
   onSelectSession,
   onRemoveSession,
   onDeleteSession,
-  onNewResearch
+  onNewResearch,
+  email,
+  onSignOut,
+  signingOut,
+  signOutError
 }) {
   const handleDelete = async (e, id) => {
     e.stopPropagation(); // prevent selecting the session when deleting it
@@ -106,6 +111,12 @@ export function Sidebar({
           <div className="flex justify-center p-8">
             <Loader2 size={18} className="text-black/40 animate-spin" />
           </div>
+        ) : historyError ? (
+          <div className="px-4 py-6">
+            <p role="alert" className="text-sm text-red-700 break-words">{historyError}</p>
+            <button type="button" onClick={onRetryHistory}
+              className="mt-2 min-h-11 text-sm underline underline-offset-4 cursor-pointer">Retry history</button>
+          </div>
         ) : sessions.length === 0 ? (
           <div className="text-center py-8 px-4">
             <p className="text-black/40 text-xs font-mono">No history yet</p>
@@ -155,6 +166,14 @@ export function Sidebar({
           ))
         )}
       </div>
+          <div className="border-t border-black/10 px-5 py-4 relative z-10">
+            <p className="truncate text-sm text-black/60" title={email}>{email}</p>
+            <button type="button" onClick={onSignOut} disabled={signingOut}
+              className="mt-2 min-h-11 text-sm underline underline-offset-4 disabled:opacity-50 cursor-pointer">
+              {signingOut ? 'Signing out…' : 'Sign out'}
+            </button>
+            {signOutError && <p role="alert" className="text-sm text-red-700">{signOutError}</p>}
+          </div>
         </div>
       </aside>
     </>

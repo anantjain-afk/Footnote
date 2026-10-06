@@ -8,7 +8,7 @@ from .nodes.cond import should_continue
 from .state import State
 
 
-def build_graph() -> StateGraph:
+def build_graph(checkpointer=None) -> StateGraph:
     builder = StateGraph(State)
     builder.add_node("search", search)
     builder.add_node("extract_contents", extract_contents)
@@ -27,7 +27,7 @@ def build_graph() -> StateGraph:
         should_continue,
         {"finish": END, "generate": "generate"},
     )
-    return builder.compile()
+    return builder.compile(checkpointer=checkpointer)
 
 
 # Compiled graph instance for execution

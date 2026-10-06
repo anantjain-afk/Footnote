@@ -7,7 +7,7 @@ from .nodes.improve import improve_report
 def route_by_intent(state: ChatState) -> str:
     return state["intent"]
 
-def build_chat_graph():
+def build_chat_graph(checkpointer=None):
     graph = StateGraph(ChatState)
 
     graph.add_node("detect_intent", detect_intent)
@@ -28,4 +28,4 @@ def build_chat_graph():
     graph.add_edge("chat_response", END)
     graph.add_edge("improve_report", END)
 
-    return graph.compile()
+    return graph.compile(checkpointer=checkpointer)

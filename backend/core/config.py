@@ -40,10 +40,10 @@ class Settings(BaseSettings):
     debug: bool = False
     cors_origins: list[str] = ["http://localhost:5173"]
 
-    # ── Database ──────────────────────────────────────────────────────────
-    db_path: str = str(
-        Path(__file__).resolve().parent.parent / "research_agent.db"
-    )
+    # ── Database & Auth ───────────────────────────────────────────────────
+    database_url: str = ""
+    supabase_url: str = ""
+    supabase_jwt_secret: str = ""
 
     # ── Research pipeline tunables ────────────────────────────────────────
     max_iterations: int = 3
