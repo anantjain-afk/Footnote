@@ -84,6 +84,16 @@ def _get_latest_drafts(section_drafts: list[dict]) -> list[dict]:
     return list(seen.values())
 
 
+def _clean_report_markdown(report: str) -> str:
+    """Remove source sections managed by the UI and common serialization artifacts."""
+    report = re.sub(r"(?im)^#{1,6}\s*(?:references|sources)\s*$[\s\S]*\Z", "", report).strip()
+    report = report.replace("[object Object]", "")
+    report = re.sub(r"\s*\[(?:\d+\s*,\s*)*\d+\](?=\s*[.,;:!?])", "", report)
+    report = re.sub(r"\\([*_`#])", r"\1", report)
+    report = report.replace("&#x20;", " ").replace("&#20;", " ")
+    return report
+
+
 async def merge_report(state: DeepResearchState) -> dict:
     """Merge section drafts into a complete report with exec summary + intro + references.
 
@@ -124,7 +134,6 @@ async def merge_report(state: DeepResearchState) -> dict:
             remapped_sections.append(remapped)
 
         combined_sections = "\n\n".join(remapped_sections)
-        reference_list = _format_reference_list(global_sources)
 
         messages = [
             SystemMessage(
@@ -135,16 +144,15 @@ Your job is to write ONLY:
 2. An Executive Summary (## Executive Summary) — 200-300 words synthesizing the key findings
 3. A brief Introduction (## Introduction) — 150-200 words framing the topic and what the report covers
 
-Then include ALL the pre-written sections EXACTLY AS PROVIDED — do NOT rewrite, rephrase, or remove any content from them. Preserve every [N] citation.
+Then include ALL the pre-written sections EXACTLY AS PROVIDED — do NOT rewrite, rephrase, or remove any content from them.
 
-After the sections, write:
-4. A Conclusion (## Conclusion) — 150-200 words on implications and future outlook
-5. A References section (## References) with the provided reference list
+After the sections, write a Conclusion (## Conclusion) — 150-200 words on implications and future outlook.
 
 Rules:
 - Do NOT alter the section content
 - Do NOT add claims not present in the sections
-- Preserve all [N] citations exactly as they appear
+- Do not add inline citation markers or a Sources/References section; the application displays sources separately
+- Format the report as clean, presentation-ready Markdown
 - Do not add a preamble or meta-commentary
 - Start directly with the title"""
             ),
@@ -153,9 +161,6 @@ Rules:
 
 Pre-written sections:
 {combined_sections}
-
-Reference list:
-{reference_list}
 
 Assemble the complete report now."""
             ),
@@ -182,7 +187,8 @@ Assemble the complete report now."""
 
 Rules:
 - Improve ONLY the aspects mentioned in the failed metrics
-- Preserve all [N] citations
+- Do not add inline citation markers or a Sources/References section; the application displays sources separately
+- Keep clean, presentation-ready Markdown
 - If groundedness failed: remove or soften any claims that seem invented (add "reportedly" or remove entirely)
 - If coverage failed: ensure every sub-question gets a substantive section
 - If coherence failed: improve transitions between sections
@@ -208,6 +214,8 @@ Revise the report to fix these issues."""
         except Exception as e:
             logger.error(f"Report revision failed: {e}")
             raise LLMError(f"Failed to revise report: {e}")
+
+    report = _clean_report_markdown(report)
 
     # ── Compute stats ────────────────────────────────────────────────────
     word_count = len(report.split())

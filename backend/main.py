@@ -1,5 +1,6 @@
 from .api.report import router as report_router
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from .core.database import init_db_pool, close_db_pool
 from .api.sessions import router as sessions_router
@@ -37,6 +38,19 @@ app.add_middleware(
 app.include_router(chat_router , prefix = '/api') 
 app.include_router(sessions_router , prefix="/api")
 app.include_router(report_router, prefix="/api")
+
+
+@app.get("/health/ready")
+async def readiness(request: Request):
+    """Quota dependency readiness; does not invoke providers or consume quota."""
+    try:
+        await request.app.state.rate_limiter.check_available()
+    except RateLimitError:
+        return JSONResponse(
+            {"status": "unavailable", "checks": {"rate_limit": "unavailable"}},
+            status_code=503,
+        )
+    return {"status": "ready", "checks": {"rate_limit": "ready"}}
 
 
 @app.get("/")

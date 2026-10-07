@@ -4,6 +4,7 @@ Run the frontend on port 5173, then: .venv/bin/python backend/tests/auth_browser
 """
 import json
 import time
+from pathlib import Path
 from urllib.parse import urlsplit, urlencode
 from uuid import uuid4
 
@@ -31,6 +32,13 @@ def run():
         google_enabled = False
         stream_requests = []
         test_session_id = str(uuid4())
+        saved_id = str(uuid4())
+        history_state = 'loaded'
+        history_requests = []
+        saved_sessions = [
+            {'id': saved_id, 'topic': 'Walkable cities and public transport', 'status': 'completed', 'mode': 'deep_research', 'created_at': '2026-10-06T10:00:00Z'},
+            {'id': str(uuid4()), 'topic': 'Advances in energy storage', 'status': 'running', 'mode': 'normal', 'created_at': '2026-10-05T10:00:00Z'},
+        ]
         page.on('pageerror', lambda error: errors.append(str(error)))
 
         def auth_route(route):
@@ -78,6 +86,11 @@ def run():
                               body='event: complete\ndata: ' + json.dumps({'report': '# Browser stream verified', 'sources': []}) + '\n\n')
             elif path == '/api/sessions' and route.request.method == 'POST':
                 route.fulfill(status=201, json={'session_id': test_session_id}, headers=headers)
+            elif path == '/api/sessions':
+                history_requests.append(path)
+                route.fulfill(status=503 if history_state == 'error' else 200, json={'detail': 'Unavailable'} if history_state == 'error' else [] if history_state == 'empty' else saved_sessions, headers=headers)
+            elif path == f'/api/sessions/{saved_id}':
+                route.fulfill(status=200, json={'session': saved_sessions[0], 'report': {'content': '# Saved city report', 'created_at': saved_sessions[0]['created_at']}, 'sources': []}, headers=headers)
             elif path.endswith('/chat'):
                 route.fulfill(status=200, json={'messages': []}, headers=headers)
             else:
@@ -85,47 +98,87 @@ def run():
 
         context.route(f'{PROJECT}/auth/v1/**', auth_route)
         context.route('http://localhost:8000/api/**', api_route)
+        screenshots = Path('.impeccable/review')
+        screenshots.mkdir(parents=True, exist_ok=True)
+
+        def capture(name):
+            for label, width, height in [('desktop', 1440, 1000), ('mobile', 390, 844)]:
+                page.set_viewport_size({'width': width, 'height': height})
+                page.evaluate('document.fonts.ready')
+                page.evaluate('window.scrollTo(0, 0)')
+                page.screenshot(path=str(screenshots / f'{name}-{label}.png'), full_page=True)
+                assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), name
+            page.set_viewport_size({'width': 1440, 'height': 1000})
+
         page.goto(ORIGIN)
-        expect(page.get_by_role('button', name='Sign In', exact=True)).to_be_visible()
+        expect(page.get_by_role('heading', name='Follow your curiosity.')).to_be_visible()
+        assert not history_requests, 'Logged-out visits must not request private session history'
+        capture('landing')
+        page.get_by_role('link', name='Start researching', exact=True).click()
+        expect(page.get_by_role('heading', name='Create your account', exact=True)).to_be_visible()
+        capture('signup')
         page.get_by_label('Email address').fill(USER['email'])
         page.get_by_label('Password', exact=True).fill('test-password')
-        page.get_by_role('button', name='Sign Up', exact=True).click()
+        page.get_by_role('button', name='Create account', exact=True).click()
         expect(page.get_by_role('status')).to_contain_text('Check your email')
         assert '/auth/v1/signup' in requests
+        page.get_by_role('button', name='Sign in', exact=True).click()
         page.get_by_label('Password', exact=True).fill('wrong-password')
-        page.get_by_role('button', name='Sign In', exact=True).click()
+        page.get_by_role('button', name='Sign in', exact=True).click()
         expect(page.get_by_role('alert')).to_contain_text('Invalid login credentials')
-        expect(page.get_by_role('button', name='Sign In', exact=True)).to_be_enabled()
-        page.get_by_role('button', name='Google', exact=True).click()
+        expect(page.get_by_role('button', name='Sign in', exact=True)).to_be_enabled()
+        page.get_by_role('button', name='Continue with Google', exact=True).click()
         expect(page.get_by_role('alert')).to_contain_text('Google sign-in is not available yet')
-        assert page.url == ORIGIN + '/'
-        page.get_by_label('Password', exact=True).fill('test-password')
-        page.get_by_role('button', name='Sign In', exact=True).click()
-        expect(page.get_by_placeholder('What would you like to research today?')).to_be_visible()
         page.reload()
-        expect(page.get_by_placeholder('What would you like to research today?')).to_be_visible()
+        expect(page.get_by_role('heading', name='Welcome back', exact=True)).to_be_visible()
+        capture('signin')
+        page.get_by_label('Email address').fill(USER['email'])
+        page.get_by_label('Password', exact=True).fill('test-password')
+        page.get_by_role('button', name='Sign in', exact=True).click()
+        expect(page.get_by_role('heading', name='Your research, continued.')).to_be_visible()
+        expect(page.locator('.session-list')).to_contain_text(saved_sessions[0]['topic'])
+        assert page.url == ORIGIN + '/'
+        capture('dashboard')
+        page.get_by_label('Search research history').fill('no matching topic')
+        expect(page.get_by_text('No research matches', exact=False)).to_be_visible()
+        page.get_by_role('button', name='Clear search', exact=True).click()
+        page.locator('.session-list').get_by_role('button', name='Walkable cities', exact=False).click()
+        expect(page.get_by_role('heading', name='Saved city report', exact=True)).to_be_visible()
+        page.reload()
+        expect(page.get_by_role('heading', name='Your research, continued.')).to_be_visible()
+        history_state = 'empty'
+        page.reload()
+        expect(page.get_by_text('A place for your next discovery.')).to_be_visible()
+        history_state = 'error'
+        page.reload()
+        expect(page.get_by_text('Your research history couldn’t be loaded. Please try again.')).to_be_visible()
+        history_state = 'loaded'
+        page.get_by_role('button', name='Try again', exact=True).click()
+        expect(page.locator('.session-list')).to_contain_text(saved_sessions[0]['topic'])
+        page.get_by_label('Deep research', exact=True).check()
+        expect(page.get_by_text('A broader investigation', exact=False)).to_be_visible()
+        page.get_by_label('Normal', exact=True).check()
         page.get_by_placeholder('What would you like to research today?').fill('Browser test topic')
         page.get_by_placeholder('What would you like to research today?').press('Enter')
         expect(page.get_by_role('heading', name='Browser stream verified', exact=True)).to_be_visible()
         assert stream_requests
         page.get_by_role('button', name='Open Sidebar', exact=True).click()
         page.get_by_role('button', name='Sign out', exact=True).click()
-        expect(page.get_by_role('button', name='Sign In', exact=True)).to_be_visible()
+        expect(page.get_by_role('heading', name='Follow your curiosity.')).to_be_visible()
         page.reload()
-        expect(page.get_by_role('button', name='Sign In', exact=True)).to_be_visible()
+        expect(page.get_by_role('heading', name='Follow your curiosity.')).to_be_visible()
         google_enabled = True
-        page.get_by_role('button', name='Google', exact=True).click()
-        expect(page.get_by_placeholder('What would you like to research today?')).to_be_visible()
+        page.get_by_role('link', name='Sign in', exact=True).first.click()
+        page.get_by_role('button', name='Continue with Google', exact=True).click()
+        expect(page.get_by_role('heading', name='Your research, continued.')).to_be_visible()
         assert '/auth/v1/authorize' in requests
         page.get_by_role('button', name='Open Sidebar', exact=True).click()
         page.get_by_role('button', name='Sign out', exact=True).click()
-        expect(page.get_by_role('button', name='Sign In', exact=True)).to_be_visible()
+        expect(page.get_by_role('heading', name='Follow your curiosity.')).to_be_visible()
+        page.goto(ORIGIN + '/?error_description=Sign-in+was+cancelled')
+        expect(page.get_by_role('alert')).to_contain_text('Sign-in was cancelled')
         assert not errors, errors
-        page.screenshot(path='/tmp/research-agent-auth-desktop.png', full_page=True)
-        page.set_viewport_size({'width': 390, 'height': 844})
-        page.screenshot(path='/tmp/research-agent-auth-mobile.png', full_page=True)
-        assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
-        print('PASS: signup confirmation, invalid credentials, disabled Google, Google callback, login, authenticated API and research stream, reload persistence, sign-out, no React errors, mobile overflow')
+        print('PASS: public landing, no logged-out history requests, signup confirmation, invalid credentials, Google unavailable and callback, sign-in, dashboard routing, saved reports, search, empty/error/retry history, research modes and stream, reload persistence, sign-out, callback errors, four desktop/mobile layouts, no React errors or overflow')
         browser.close()
 
 

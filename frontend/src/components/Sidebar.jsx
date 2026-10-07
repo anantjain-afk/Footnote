@@ -169,7 +169,7 @@ export function Sidebar({
           <div className="border-t border-black/10 px-5 py-4 relative z-10">
             <p className="truncate text-sm text-black/60" title={email}>{email}</p>
             <button type="button" onClick={onSignOut} disabled={signingOut}
-              className="mt-2 min-h-11 text-sm underline underline-offset-4 disabled:opacity-50 cursor-pointer">
+              className="mt-2 min-h-11 text-sm underline decoration-purple-300 decoration-2 underline-offset-4 hover:text-purple-800 hover:decoration-purple-800 focus-visible:outline-2 focus-visible:outline-purple-800 focus-visible:outline-offset-4 disabled:opacity-50 cursor-pointer">
               {signingOut ? 'Signing out…' : 'Sign out'}
             </button>
             {signOutError && <p role="alert" className="text-sm text-red-700">{signOutError}</p>}

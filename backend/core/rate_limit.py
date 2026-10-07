@@ -59,18 +59,25 @@ class RateLimiter:
         self.limits = {"reports": reports, "chat": chat}
         self.window_seconds = window_seconds
 
-    async def consume(self, user_id: str, quota: Quota):
+    async def _eval(self, script: str, *args):
         try:
             if self.client is None:
                 raise ConnectionError("Redis is not configured")
-            delay = int(await self.client.eval(
-                ADMIT_SCRIPT, 1, f"{self.prefix}:rate-limit:{quota}:{user_id}",
-                self.window_seconds * 1000, self.limits[quota], uuid4().hex,
-            ))
+            return await self.client.eval(script, *args)
         except (RedisError, ConnectionError, OSError, TimeoutError):
             # Do not log exception text: connection errors may contain credentials.
-            logger.warning("Rate limit storage unavailable quota=%s", quota)
+            logger.warning("Rate limit storage unavailable; check REDIS_URL and Redis connectivity")
             raise RateLimitError(503, "Generation and chat are temporarily unavailable. Please try again shortly.") from None
+
+    async def check_available(self):
+        """Check quota storage without writing keys or spending an allowance."""
+        await self._eval("return 1", 0)
+
+    async def consume(self, user_id: str, quota: Quota):
+        delay = int(await self._eval(
+            ADMIT_SCRIPT, 1, f"{self.prefix}:rate-limit:{quota}:{user_id}",
+            self.window_seconds * 1000, self.limits[quota], uuid4().hex,
+        ))
         if delay:
             logger.info("Rate limit denied quota=%s", quota)
             action = "generate" if quota == "reports" else "send"
@@ -91,6 +98,8 @@ def create_rate_limiter():
             )
         except (ValueError, RedisError):
             logger.warning("Invalid rate limit storage configuration")
+    else:
+        logger.warning("REDIS_URL is missing; generation and chat will return 503 until configured")
     return RateLimiter(client, settings.rate_limit_key_prefix, settings.rate_limit_reports,
                        settings.rate_limit_chat, settings.rate_limit_window_seconds)
 

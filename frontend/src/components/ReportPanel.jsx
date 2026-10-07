@@ -4,6 +4,14 @@ import { FileDown, Plus, Loader2, Menu, MessageSquare } from 'lucide-react'
 
 function SourcesList({ sources }) {
   if (!sources || sources.length === 0) return null;
+  const displayText = (value) => {
+    if (typeof value === 'string' || typeof value === 'number') return String(value);
+    if (Array.isArray(value)) return value.map(displayText).filter(Boolean).join(', ');
+    if (value && typeof value === 'object') {
+      return displayText(value.title || value.name || value.text || value.url || value.value || '');
+    }
+    return '';
+  };
   return (
     <div className="mt-8 pt-6 border-t border-black/10">
       <h2 className="text-sm font-semibold text-black uppercase tracking-wider mb-4">
@@ -12,6 +20,8 @@ function SourcesList({ sources }) {
       <ol className="space-y-4">
         {sources.map((source) => {
           const id = source.id || source.source_number;
+          const url = displayText(source.url);
+          const title = displayText(source.title) || url || `Source ${id}`;
           return (
           <li
             key={id}
@@ -23,12 +33,12 @@ function SourcesList({ sources }) {
             </span>
             <div>
               <a
-                href={source.url}
+                href={url || undefined}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-black hover:underline underline-offset-2 font-medium break-all"
               >
-                {source.title || source.url}
+                {title}
               </a>
               {/* <p className="text-black/60 text-xs mt-1 line-clamp-2 break-all">
                 {source.snippet}

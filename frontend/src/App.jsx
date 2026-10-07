@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import DashboardView from './components/DashboardView'
 import LandingView from './components/LandingView'
 import LoadingView from './components/LoadingView'
 import DeepResearchLoadingView from './components/DeepResearchLoadingView'
@@ -18,18 +19,32 @@ function App() {
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center" role="status">Restoring your session…</div>
   }
-  if (!user) return <Login />
+  if (!user) {
+    const query = new URLSearchParams(window.location.search)
+    const authMode = query.get('auth')
+    const callbackError = query.has('error_description') || new URLSearchParams(window.location.hash.slice(1)).has('error_description')
+    return authMode === 'signin' || authMode === 'signup' || callbackError
+      ? <Login initialMode={authMode === 'signup' ? 'signup' : 'signin'} />
+      : <LandingView />
+  }
   return <AuthenticatedApp key={user.id} />
 }
 
 function AuthenticatedApp() {
   const { user, signOut } = useAuth()
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (url.searchParams.has('auth')) {
+      url.searchParams.delete('auth')
+      window.history.replaceState(null, '', url)
+    }
+  }, [])
   const quotas = useQuotaCooldowns()
   const researchPending = useRef(false)
   const [errorStatus, setErrorStatus] = useState(null)
   const [signingOut, setSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState(null)
-  const [view, setView] = useState('landing') // 'landing' | 'loading' | 'report' | 'error' | 'session_loading'
+  const [view, setView] = useState('dashboard') // 'dashboard' | 'loading' | 'report' | 'error' | 'session_loading'
   const [mode, setMode] = useState('normal')
   const [activeSessionId, setActiveSessionId] = useState(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -145,7 +160,7 @@ function AuthenticatedApp() {
 
   const handleReset = () => {
     setErrorStatus(null)
-    setView('landing')
+    setView('dashboard')
     setActiveSessionId(null)
     setTopic('')
     setReportData('')
@@ -186,15 +201,18 @@ function AuthenticatedApp() {
         signOutError={signOutError}
       />
 
-      <main className="flex-1 h-full overflow-y-auto relative">
-        {view === 'landing' && (
-          <LandingView 
+      <main className="flex-1 min-w-0 h-full overflow-y-auto relative">
+        {view === 'dashboard' && (
+          <DashboardView
+            sessions={sessions}
+            loadingSessions={loadingSessions}
+            historyError={historyError}
+            onRetryHistory={refresh}
+            onSelectSession={handleSelectSession}
             cooldownSeconds={quotas.reports}
             initialTopic={topic}
             initialMode={mode}
-            onSubmit={handleResearch} 
-            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-            isSidebarOpen={isSidebarOpen}
+            onSubmit={handleResearch}
           />
         )}
         
@@ -248,7 +266,7 @@ function AuthenticatedApp() {
             errorStatus={errorStatus}
             cooldownSeconds={quotas.reports}
             onRetry={handleRetry} 
-            onReset={() => setView('landing')}
+            onReset={() => setView('dashboard')}
           />
         )}
 

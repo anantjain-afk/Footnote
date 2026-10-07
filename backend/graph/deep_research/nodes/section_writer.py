@@ -40,8 +40,7 @@ async def write_section(state: SectionWriterState) -> dict:
     Each section writer:
     - Receives only its sub-question's notes (~4K tokens)
     - Can write 600-1200 words without hitting token limits
-    - Is told to ONLY cite claims that appear in the notes
-    - Uses [NOTE N] citations that the merger remaps to global [N]
+    - Is told to ONLY state claims that appear in the notes
     """
     sub_q = state["sub_question"]
     notes = state.get("notes", [])
@@ -61,8 +60,7 @@ async def write_section(state: SectionWriterState) -> dict:
 
 GROUNDING RULES — these are absolute:
 - You may ONLY state claims that appear in the provided notes
-- After every factual claim, cite the note number: "claim text [NOTE 3]."
-- Use [NOTE 1,3] when a claim is supported by multiple notes
+- Do not add inline citation markers. Sources are presented separately by the application.
 - If you want to say something that is NOT in any note, do NOT write it
 - Do NOT invent statistics, percentages, or specific numbers unless they appear verbatim in a note
 - You may add brief connecting/transitional sentences without citations
