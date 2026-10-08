@@ -68,25 +68,24 @@ export function ReportPanel({
   onToggleChat,
   versions = [],
   selectedVersionNumber,
+  currentVersionNumber,
   onSelectVersion,
-  onUndoVersion,
-  canUndoVersion,
+  pendingChange,
+  onApproveChanges,
+  onRejectChanges,
   historyLoading,
   historyBusy,
   historyError
 }) {
   const panelRef = useRef(null)
   const selectedVersion = versions.find((version) => version.version_number === selectedVersionNumber)
-  const previousVersion = selectedVersion
-    ? versions.find((version) => version.version_number === selectedVersion.version_number - 1)
-    : null
 
   // Reset scroll position to top when report content updates
   useEffect(() => {
     if (panelRef.current) {
       panelRef.current.scrollTo({ top: 0, behavior: 'smooth' })
     }
-  }, [report])
+  }, [report, pendingChange, selectedVersionNumber])
 
   return (
     <div 
@@ -122,11 +121,9 @@ export function ReportPanel({
           <ReportVersionControls
             versions={versions}
             selectedVersionNumber={selectedVersionNumber}
+            currentVersionNumber={currentVersionNumber}
             onSelectVersion={onSelectVersion}
-            onUndo={onUndoVersion}
-            canUndo={canUndoVersion}
             loading={historyLoading}
-            busy={historyBusy}
             error={historyError}
           />
 
@@ -164,17 +161,41 @@ export function ReportPanel({
           isChatOpen ? 'px-6 md:px-8 pb-12' : ''
         }`}
       >
-        {selectedVersion && selectedVersion.version_number > 1 && previousVersion ? (
-          <ReportVersionDiff version={selectedVersion} previousVersion={previousVersion} />
+        {pendingChange ? (
+          <>
+            <ReportVersionDiff
+              previousContent={pendingChange.previousContent}
+              proposedContent={pendingChange.proposedContent}
+            />
+            <div className="mt-5 flex flex-wrap items-center justify-end gap-3 border-t border-black/10 pt-4">
+              <button
+                type="button"
+                onClick={onRejectChanges}
+                disabled={historyBusy}
+                className="border border-black/25 px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:border-black hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50"
+              >
+                Reject changes
+              </button>
+              <button
+                type="button"
+                onClick={onApproveChanges}
+                disabled={historyBusy}
+                className="bg-black px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50"
+              >
+                {historyBusy ? 'Saving…' : 'Approve changes'}
+              </button>
+            </div>
+            {historyError && <p className="mt-3 text-right text-xs text-red-800" role="alert">{historyError}</p>}
+          </>
         ) : (
           <>
-            <MarkdownReport content={selectedVersion?.content || report} sources={sources} />
-            <SourcesList sources={sources} />
-            {selectedVersion?.version_number === 1 && versions.length > 1 && (
-              <p className="mt-8 border-t border-black/10 pt-4 text-xs text-black/55">
-                This is the original report. Select a later version to compare its changes.
+            {selectedVersion && (
+              <p className="mb-4 border-b border-black/10 pb-3 text-xs text-black/55">
+                Viewing previous report · v{selectedVersion.version_number}
               </p>
             )}
+            <MarkdownReport content={selectedVersion ? selectedVersion.content : report} sources={sources} />
+            <SourcesList sources={sources} />
           </>
         )}
       </div>

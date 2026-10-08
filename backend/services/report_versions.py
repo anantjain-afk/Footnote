@@ -1,4 +1,3 @@
-import difflib
 import uuid
 
 import asyncpg
@@ -68,84 +67,6 @@ async def append_report_version(
         return dict(row)
 
 
-async def restore_previous_report(db: asyncpg.Connection, session_id: str):
-    """Restore the version before the latest improvement and append a restore entry."""
-    async with db.transaction():
-        current = await db.fetchrow(
-            "SELECT content FROM reports WHERE session_id=$1 FOR UPDATE", session_id
-        )
-        if not current:
-            return None, "No report found for this session."
-
-        await _ensure_baseline_version(db, session_id)
-        latest = await db.fetchrow(
-            """SELECT version_number, version_type FROM report_versions
-               WHERE session_id=$1 ORDER BY version_number DESC LIMIT 1""",
-            session_id,
-        )
-        if not latest or latest["version_type"] != "improve" or latest["version_number"] <= 1:
-            return None, "There is no report improvement available to undo."
-
-        previous = await db.fetchrow(
-            """SELECT version_number, content FROM report_versions
-               WHERE session_id=$1 AND version_number=$2""",
-            session_id, latest["version_number"] - 1,
-        )
-        if not previous:
-            return None, "The previous report version could not be found."
-
-        restored_version_number = latest["version_number"] + 1
-        await db.execute(
-            """INSERT INTO report_versions
-                 (id, session_id, version_number, content, word_count, change_prompt, version_type, restored_from_version)
-               VALUES ($1, $2, $3, $4, $5, $6, 'restore', $7)""",
-            str(uuid.uuid4()), session_id, restored_version_number, previous["content"],
-            len(previous["content"].split()),
-            f"Restored version {previous['version_number']}", previous["version_number"],
-        )
-        await db.execute(
-            "UPDATE reports SET content=$1, word_count=$2 WHERE session_id=$3",
-            previous["content"], len(previous["content"].split()), session_id,
-        )
-        return {
-            "report": previous["content"],
-            "version_number": restored_version_number,
-            "restored_from_version": previous["version_number"],
-        }, None
-
-
-def _make_diff_rows(previous: str, current: str):
-    old_lines = previous.splitlines()
-    new_lines = current.splitlines()
-    matcher = difflib.SequenceMatcher(a=old_lines, b=new_lines)
-    rows = []
-
-    for group_index, group in enumerate(matcher.get_grouped_opcodes(3)):
-        if group_index:
-            rows.append({"kind": "separator", "left": None, "right": None})
-        for tag, i1, i2, j1, j2 in group:
-            if tag == "equal":
-                rows.extend({"kind": "equal", "left": old_lines[i], "right": new_lines[j]}
-                            for i, j in zip(range(i1, i2), range(j1, j2)))
-            elif tag == "delete":
-                rows.extend({"kind": "removed", "left": line, "right": None}
-                            for line in old_lines[i1:i2])
-            elif tag == "insert":
-                rows.extend({"kind": "added", "left": None, "right": line}
-                            for line in new_lines[j1:j2])
-            else:
-                old_block = old_lines[i1:i2]
-                new_block = new_lines[j1:j2]
-                for index in range(max(len(old_block), len(new_block))):
-                    rows.append({
-                        "kind": "changed",
-                        "left": old_block[index] if index < len(old_block) else None,
-                        "right": new_block[index] if index < len(new_block) else None,
-                    })
-
-    return rows
-
-
 async def list_report_versions(db: asyncpg.Connection, session_id: str):
     await _ensure_baseline_version(db, session_id)
     versions = await db.fetch(
@@ -154,14 +75,4 @@ async def list_report_versions(db: asyncpg.Connection, session_id: str):
            FROM report_versions WHERE session_id=$1 ORDER BY version_number ASC""",
         session_id,
     )
-    result = []
-    previous_content = None
-    for row in versions:
-        version = dict(row)
-        version["diff_rows"] = (
-            _make_diff_rows(previous_content, version["content"])
-            if previous_content is not None else []
-        )
-        previous_content = version["content"]
-        result.append(version)
-    return result
+    return [dict(row) for row in versions]

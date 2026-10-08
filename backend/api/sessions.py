@@ -10,7 +10,7 @@ from ..core.database import get_db, get_pool, get_checkpointer
 from ..graph.research.builder import build_graph
 from ..core.sse import get_queue, remove_queue, publish_event, format_sse_event
 from ..core.logging import get_logger
-from ..services.report_versions import save_initial_report_version, list_report_versions, restore_previous_report
+from ..services.report_versions import save_initial_report_version, list_report_versions, append_report_version
 
 logger = get_logger(__name__)
 
@@ -19,6 +19,11 @@ router = APIRouter(prefix="/sessions")
 class CreateSessionRequest(BaseModel):
     topic: str
     mode: str = "normal"
+
+
+class ApproveReportVersionRequest(BaseModel):
+    content: str
+    change_prompt: str
 
 
 # ── BACKGROUND TASK ───────────────────────────────────────────────────────────
@@ -379,20 +384,30 @@ async def get_report_versions(session_id: str, user: User = Depends(get_current_
     return {"versions": await list_report_versions(db, session_id)}
 
 
-@router.post("/{session_id}/report/undo")
-async def undo_report_version(session_id: str, user: User = Depends(get_current_user), db: asyncpg.Connection = Depends(get_db)):
+@router.post("/{session_id}/report/versions/approve")
+async def approve_report_version(
+    session_id: str,
+    body: ApproveReportVersionRequest,
+    user: User = Depends(get_current_user),
+    db: asyncpg.Connection = Depends(get_db),
+):
     session = await db.fetchrow(
-        "SELECT id FROM research_sessions WHERE id=$1 AND user_id=$2",
+        "SELECT id, status FROM research_sessions WHERE id=$1 AND user_id=$2",
         session_id, user.id,
     )
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
+    if session["status"] != "completed":
+        raise HTTPException(status_code=400, detail="Report is not ready to be updated.")
 
-    restored, error = await restore_previous_report(db, session_id)
-    if error:
-        status_code = 404 if error.startswith("No report") else 409
-        raise HTTPException(status_code=status_code, detail=error)
-    return restored
+    version = await append_report_version(db, session_id, body.content, body.change_prompt)
+    if version:
+        return {"report": body.content, "version_number": version["version_number"]}
+
+    current = await db.fetchrow("SELECT content FROM reports WHERE session_id=$1", session_id)
+    if not current:
+        raise HTTPException(status_code=404, detail="No report found for this session.")
+    return {"report": current["content"], "version_number": None}
 
 
 # ── DELETE ────────────────────────────────────────────────────────────────────

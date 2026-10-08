@@ -4,7 +4,7 @@ import ReportPanel from './ReportPanel'
 import ChatPanel from './ChatPanel'
 import ChatInput from './ChatInput'
 import { getChatHistory } from '../api/chat'
-import { getReportVersions, undoReportVersion } from '../api/sessions'
+import { approveReportVersion, getReportVersions } from '../api/sessions'
 import { exportReportPDF } from '../api/research'
 import { useChatStream } from '../hooks/useChatStream'
 
@@ -34,15 +34,21 @@ export function ReportChatView({
   const [toastMessage, setToastMessage] = useState('Report updated successfully')
   const [versions, setVersions] = useState([])
   const [selectedVersionNumber, setSelectedVersionNumber] = useState(null)
+  const [pendingChange, setPendingChange] = useState(null)
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyBusy, setHistoryBusy] = useState(false)
   const [historyError, setHistoryError] = useState('')
+  const inputNotice = pendingChange
+    ? 'Approve or reject the proposed changes before sending another request.'
+    : chatNotice
 
   const { streamingMessage, isStreaming, send: sendChatStream } = useChatStream(sessionId)
 
   // Sync report when initialReport changes (e.g. user selects a different session)
   useEffect(() => {
     setReport(initialReport)
+    setPendingChange(null)
+    setSelectedVersionNumber(null)
   }, [initialReport])
 
   useEffect(() => {
@@ -111,6 +117,7 @@ export function ReportChatView({
     const data = await getReportVersions(sessionId)
     setVersions(data.versions || [])
     setHistoryError('')
+    return data.versions || []
   }
 
   const flashToast = (message) => {
@@ -120,8 +127,9 @@ export function ReportChatView({
   }
 
   const handleSend = async (messageText) => {
-    if (!messageText.trim() || pending.current || cooldownSeconds > 0) return
+    if (!messageText.trim() || pending.current || pendingChange || cooldownSeconds > 0) return
     pending.current = true
+    setSelectedVersionNumber(null)
     setChatError(null)
     setIsChatOpen(true)
     const optimisticMessage = { role: 'user', content: messageText }
@@ -134,13 +142,13 @@ export function ReportChatView({
       setMessages(prev => [...prev, { role: 'assistant', content: finalMessage, intent }])
       if (intent === 'IMPROVE' && updated_report) {
         const reportChanged = updated_report !== report
-        setReport(updated_report)
         setSelectedVersionNumber(null)
-        if (reportChanged) flashToast('Report updated successfully')
-        try {
-          await refreshVersions()
-        } catch (error) {
-          setHistoryError(error.message || 'Report changed, but version history could not refresh.')
+        if (reportChanged) {
+          setPendingChange({
+            previousContent: report,
+            proposedContent: updated_report,
+            request: messageText,
+          })
         }
       }
     } catch (error) {
@@ -155,29 +163,38 @@ export function ReportChatView({
     }
   }
 
-  const handleUndoVersion = async () => {
-    if (historyBusy || !sessionId) return
+  const handleApproveChanges = async () => {
+    if (!pendingChange || historyBusy || !sessionId) return
     setHistoryBusy(true)
     setHistoryError('')
     try {
-      const result = await undoReportVersion(sessionId)
+      const result = await approveReportVersion(sessionId, pendingChange.proposedContent, pendingChange.request)
       setReport(result.report)
+      setPendingChange(null)
       setSelectedVersionNumber(null)
       try {
         await refreshVersions()
       } catch (error) {
-        setHistoryError(error.message || 'Report restored, but version history could not refresh.')
+        setHistoryError(error.message || 'Changes were approved, but version history could not refresh.')
       }
-      flashToast('Previous report restored')
+      flashToast('Report changes approved')
     } catch (error) {
-      setHistoryError(error.message || 'Could not restore the previous report.')
+      setHistoryError(error.message || 'Could not approve report changes.')
     } finally {
       setHistoryBusy(false)
     }
   }
 
+  const handleRejectChanges = () => {
+    if (!pendingChange || historyBusy) return
+    setPendingChange(null)
+    setSelectedVersionNumber(null)
+    setHistoryError('')
+    flashToast('Changes rejected. Current report kept.')
+  }
+
   const latestVersion = versions.at(-1)
-  const canUndoVersion = latestVersion?.version_type === 'improve' && !isLoading && !isStreaming
+  const previousVersions = latestVersion ? versions.slice(0, -1) : []
 
   const handleExportPdf = async () => {
     setExporting(true)
@@ -217,11 +234,13 @@ export function ReportChatView({
               isSidebarOpen={isSidebarOpen}
               hasMessages={messages.length > 0}
               onToggleChat={() => setIsChatOpen(false)}
-              versions={versions}
+              versions={previousVersions}
               selectedVersionNumber={selectedVersionNumber}
+              currentVersionNumber={latestVersion?.version_number}
               onSelectVersion={setSelectedVersionNumber}
-              onUndoVersion={handleUndoVersion}
-              canUndoVersion={canUndoVersion}
+              pendingChange={pendingChange}
+              onApproveChanges={handleApproveChanges}
+              onRejectChanges={handleRejectChanges}
               historyLoading={historyLoading}
               historyBusy={historyBusy}
               historyError={historyError}
@@ -229,8 +248,8 @@ export function ReportChatView({
           </div>
           <div className="w-[40%] h-full">
             <ChatPanel
-              notice={chatNotice}
-              submitDisabled={cooldownSeconds > 0}
+              notice={inputNotice}
+              submitDisabled={cooldownSeconds > 0 || Boolean(pendingChange)}
               messages={messages}
               streamingMessage={streamingMessage}
               isStreaming={isStreaming}
@@ -258,11 +277,13 @@ export function ReportChatView({
             isSidebarOpen={isSidebarOpen}
             hasMessages={messages.length > 0}
             onToggleChat={() => setIsChatOpen(true)}
-            versions={versions}
+            versions={previousVersions}
             selectedVersionNumber={selectedVersionNumber}
+            currentVersionNumber={latestVersion?.version_number}
             onSelectVersion={setSelectedVersionNumber}
-            onUndoVersion={handleUndoVersion}
-            canUndoVersion={canUndoVersion}
+            pendingChange={pendingChange}
+            onApproveChanges={handleApproveChanges}
+            onRejectChanges={handleRejectChanges}
             historyLoading={historyLoading}
             historyBusy={historyBusy}
             historyError={historyError}
@@ -272,8 +293,8 @@ export function ReportChatView({
           <div className="absolute bottom-6 left-0 right-0 z-10 flex justify-center pointer-events-none">
   <div className="relative w-full max-w-2xl pointer-events-auto">
     <ChatInput
-      notice={chatNotice}
-      submitDisabled={cooldownSeconds > 0}
+      submitDisabled={cooldownSeconds > 0 || Boolean(pendingChange)}
+      notice={inputNotice}
       value={inputValue}
       onChange={setInputValue}
       onSubmit={() => handleSend(inputValue)}

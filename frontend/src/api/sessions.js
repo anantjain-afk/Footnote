@@ -33,15 +33,17 @@ export async function getReportVersions(sessionId) {
   return res.json(); // { versions: [...] }
 }
 
-export async function undoReportVersion(sessionId) {
-  const res = await fetchWithAuth(`${BASE}/sessions/${sessionId}/report/undo`, {
+export async function approveReportVersion(sessionId, content, changePrompt) {
+  const res = await fetchWithAuth(`${BASE}/sessions/${sessionId}/report/versions/approve`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, change_prompt: changePrompt }),
   });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.detail || 'Failed to undo report change');
+    throw new Error(errorData.detail || 'Failed to approve report change');
   }
-  return res.json(); // { report, version_number, restored_from_version }
+  return res.json(); // { report, version_number }
 }
 
 export async function deleteSession(sessionId) {

@@ -9,7 +9,6 @@ from ..core.database import get_db, get_checkpointer
 from ..graph.chat.builder import build_chat_graph
 from ..core.sse import format_sse_event
 from ..core.logging import get_logger
-from ..services.report_versions import append_report_version
 
 logger = get_logger(__name__)
 
@@ -122,7 +121,7 @@ async def chat(request: Request, session_id: str, body: ChatRequest, user: User 
             "updated_report": ""
         }, config=config)
 
-    # 5. persist both turns and updated report atomically
+    # 5. Persist the chat turn; any report update stays pending until approved.
     async with db.transaction():
         await save_messages(
             db,
@@ -130,9 +129,6 @@ async def chat(request: Request, session_id: str, body: ChatRequest, user: User 
             user_msg=body.message,
             assistant_msg=result["response"]
         )
-
-        if result["intent"] == "IMPROVE" and result["updated_report"]:
-            await append_report_version(db, session_id, result["updated_report"], body.message)
 
     # 6. build response payload
     payload = {
@@ -209,7 +205,7 @@ async def chat_stream(request: Request, session_id: str, body: ChatRequest, user
                         intent = output.get("intent", "")
                         updated_report = output.get("updated_report", "")
 
-            # Persist turns and updated report automatically at the end
+            # Persist the conversation while leaving report proposals pending.
             # In SSE, we need a distinct db connection, wait, the Dependency injects one for the request, but we are inside a generator
             # The dependency 'db' is kept alive during the streaming response.
             async with db.transaction():
@@ -219,9 +215,6 @@ async def chat_stream(request: Request, session_id: str, body: ChatRequest, user
                     user_msg=body.message,
                     assistant_msg=final_response
                 )
-
-                if intent == "IMPROVE" and updated_report:
-                    await append_report_version(db, session_id, updated_report, body.message)
 
             # Send done event with final payload
             payload = {"intent": intent, "response": final_response}
