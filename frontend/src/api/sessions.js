@@ -24,6 +24,26 @@ export async function getSession(sessionId) {
   return res.json(); // { session, report }
 }
 
+export async function getReportVersions(sessionId) {
+  const res = await fetchWithAuth(`${BASE}/sessions/${sessionId}/report/versions`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Failed to fetch report versions');
+  }
+  return res.json(); // { versions: [...] }
+}
+
+export async function undoReportVersion(sessionId) {
+  const res = await fetchWithAuth(`${BASE}/sessions/${sessionId}/report/undo`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Failed to undo report change');
+  }
+  return res.json(); // { report, version_number, restored_from_version }
+}
+
 export async function deleteSession(sessionId) {
   const res = await fetchWithAuth(`${BASE}/sessions/${sessionId}`, {
     method: "DELETE",

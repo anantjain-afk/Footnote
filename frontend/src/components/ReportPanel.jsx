@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import MarkdownReport from './MarkdownReport'
-import { FileDown, Plus, Loader2, Menu, MessageSquare } from 'lucide-react'
+import { FileDown, Loader2, MessageSquare } from 'lucide-react'
+import { ReportVersionControls, ReportVersionDiff } from './ReportVersionHistory'
 
 function SourcesList({ sources }) {
   if (!sources || sources.length === 0) return null;
@@ -64,9 +65,21 @@ export function ReportPanel({
   onToggleSidebar,
   isSidebarOpen,
   hasMessages,
-  onToggleChat
+  onToggleChat,
+  versions = [],
+  selectedVersionNumber,
+  onSelectVersion,
+  onUndoVersion,
+  canUndoVersion,
+  historyLoading,
+  historyBusy,
+  historyError
 }) {
   const panelRef = useRef(null)
+  const selectedVersion = versions.find((version) => version.version_number === selectedVersionNumber)
+  const previousVersion = selectedVersion
+    ? versions.find((version) => version.version_number === selectedVersion.version_number - 1)
+    : null
 
   // Reset scroll position to top when report content updates
   useEffect(() => {
@@ -79,7 +92,7 @@ export function ReportPanel({
     <div 
       ref={panelRef}
       className={`h-full flex flex-col overflow-y-auto relative bg-white transition-all duration-300 text-black ${
-        isChatOpen ? 'w-full' : 'w-full px-4 md:px-12 lg:px-32 py-6 pb-32'
+        isChatOpen ? 'w-full' : 'w-full px-4 md:px-12 lg:px-32 py-6 '
       }`}
     >
       {/* Grainy effect overlay */}
@@ -90,7 +103,9 @@ export function ReportPanel({
 
       {/* Sticky top navigation bar */}
       <div 
-        className={`sticky top-0 z-20 flex items-center justify-between py-4 border-b border-black/10 bg-white/90 backdrop-blur-md px-6 -mx-6 mb-6`}
+        className={`sticky top-0 z-20 flex flex-wrap items-center justify-between gap-y-3 py-4 border-b border-black/10 bg-white/90 backdrop-blur-md px-6 ${
+          isChatOpen ? (isSidebarOpen ? '' : 'pl-16') : '-mx-6'
+        } mb-6`}
       >
         <div className="flex items-center gap-4 min-w-0 pr-4">
           <div className="flex flex-col min-w-0">
@@ -103,7 +118,18 @@ export function ReportPanel({
           </div>
         </div>
 
-        <div className="flex items-center space-x-3 shrink-0">
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+          <ReportVersionControls
+            versions={versions}
+            selectedVersionNumber={selectedVersionNumber}
+            onSelectVersion={onSelectVersion}
+            onUndo={onUndoVersion}
+            canUndo={canUndoVersion}
+            loading={historyLoading}
+            busy={historyBusy}
+            error={historyError}
+          />
+
           {/* Export PDF Button */}
           <button
             onClick={onExportPdf}
@@ -122,9 +148,9 @@ export function ReportPanel({
           {hasMessages && !isChatOpen && (
             <button
               onClick={onToggleChat}
-              className="flex items-center space-x-2 px-3 py-2 rounded-md border border-black hover:bg-black/5 text-black text-sm font-medium transition-all duration-200 cursor-pointer"
+              className="flex items-center space-x-2 px-3 py-2 rounded-md border bg-yellow-400 border-black hover:bg-yellow-500 text-black text-sm font-light transition-all duration-200 cursor-pointer"
             >
-              <MessageSquare className="w-3.5 h-3.5" />
+              <MessageSquare className="w-3.5 h-3.5 " />
               <span>Open Chat</span>
             </button>
           )}
@@ -138,8 +164,19 @@ export function ReportPanel({
           isChatOpen ? 'px-6 md:px-8 pb-12' : ''
         }`}
       >
-        <MarkdownReport content={report} sources={sources} />
-        <SourcesList sources={sources} />
+        {selectedVersion && selectedVersion.version_number > 1 && previousVersion ? (
+          <ReportVersionDiff version={selectedVersion} previousVersion={previousVersion} />
+        ) : (
+          <>
+            <MarkdownReport content={selectedVersion?.content || report} sources={sources} />
+            <SourcesList sources={sources} />
+            {selectedVersion?.version_number === 1 && versions.length > 1 && (
+              <p className="mt-8 border-t border-black/10 pt-4 text-xs text-black/55">
+                This is the original report. Select a later version to compare its changes.
+              </p>
+            )}
+          </>
+        )}
       </div>
 
       {/* Updating Loading Overlay */}

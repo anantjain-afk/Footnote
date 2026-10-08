@@ -31,7 +31,7 @@ export function ChatInput({
 
       {/* Input container */}
       <div 
-        className="relative flex items-end w-full bg-[#f4f4f5] rounded-[24px] border border-black/5 p-2 pr-3 focus-within:border-black/20 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all duration-200"
+        className="relative flex items-end w-full bg-white rounded-[24px] border border-black/40 p-2 pr-3 focus-within:border-black/20 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all duration-200"
       >
         <textarea
           value={value}

@@ -4,6 +4,7 @@ import ReportPanel from './ReportPanel'
 import ChatPanel from './ChatPanel'
 import ChatInput from './ChatInput'
 import { getChatHistory } from '../api/chat'
+import { getReportVersions, undoReportVersion } from '../api/sessions'
 import { exportReportPDF } from '../api/research'
 import { useChatStream } from '../hooks/useChatStream'
 
@@ -30,6 +31,12 @@ export function ReportChatView({
   const [isUpdatingReport, setIsUpdatingReport] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('Report updated successfully')
+  const [versions, setVersions] = useState([])
+  const [selectedVersionNumber, setSelectedVersionNumber] = useState(null)
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyBusy, setHistoryBusy] = useState(false)
+  const [historyError, setHistoryError] = useState('')
 
   const { streamingMessage, isStreaming, send: sendChatStream } = useChatStream(sessionId)
 
@@ -37,6 +44,30 @@ export function ReportChatView({
   useEffect(() => {
     setReport(initialReport)
   }, [initialReport])
+
+  useEffect(() => {
+    let active = true
+    setVersions([])
+    setSelectedVersionNumber(null)
+    setHistoryError('')
+    if (!sessionId) return undefined
+
+    setHistoryLoading(true)
+    getReportVersions(sessionId)
+      .then((data) => {
+        if (active) setVersions(data.versions || [])
+      })
+      .catch((error) => {
+        if (active) setHistoryError(error.message || 'Could not load report versions.')
+      })
+      .finally(() => {
+        if (active) setHistoryLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [sessionId])
 
   // Restore chat history on mount or when sessionId changes
   useEffect(() => {
@@ -76,6 +107,18 @@ export function ReportChatView({
     return keywords.some(k => msg.toLowerCase().includes(k))
   }
 
+  const refreshVersions = async () => {
+    const data = await getReportVersions(sessionId)
+    setVersions(data.versions || [])
+    setHistoryError('')
+  }
+
+  const flashToast = (message) => {
+    setToastMessage(message)
+    setShowToast(true)
+    window.setTimeout(() => setShowToast(false), 2200)
+  }
+
   const handleSend = async (messageText) => {
     if (!messageText.trim() || pending.current || cooldownSeconds > 0) return
     pending.current = true
@@ -90,9 +133,15 @@ export function ReportChatView({
       const { intent, updated_report, finalMessage } = await sendChatStream(messageText)
       setMessages(prev => [...prev, { role: 'assistant', content: finalMessage, intent }])
       if (intent === 'IMPROVE' && updated_report) {
+        const reportChanged = updated_report !== report
         setReport(updated_report)
-        setShowToast(true)
-        setTimeout(() => setShowToast(false), 2000)
+        setSelectedVersionNumber(null)
+        if (reportChanged) flashToast('Report updated successfully')
+        try {
+          await refreshVersions()
+        } catch (error) {
+          setHistoryError(error.message || 'Report changed, but version history could not refresh.')
+        }
       }
     } catch (error) {
       onQuotaError?.(error)
@@ -105,6 +154,30 @@ export function ReportChatView({
       setIsUpdatingReport(false)
     }
   }
+
+  const handleUndoVersion = async () => {
+    if (historyBusy || !sessionId) return
+    setHistoryBusy(true)
+    setHistoryError('')
+    try {
+      const result = await undoReportVersion(sessionId)
+      setReport(result.report)
+      setSelectedVersionNumber(null)
+      try {
+        await refreshVersions()
+      } catch (error) {
+        setHistoryError(error.message || 'Report restored, but version history could not refresh.')
+      }
+      flashToast('Previous report restored')
+    } catch (error) {
+      setHistoryError(error.message || 'Could not restore the previous report.')
+    } finally {
+      setHistoryBusy(false)
+    }
+  }
+
+  const latestVersion = versions.at(-1)
+  const canUndoVersion = latestVersion?.version_type === 'improve' && !isLoading && !isStreaming
 
   const handleExportPdf = async () => {
     setExporting(true)
@@ -122,7 +195,7 @@ export function ReportChatView({
       {/* Dynamic green toast notification when report updates */}
       {showToast && (
         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center space-x-2 bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-900/10 font-sans text-xs font-semibold tracking-wide animate-[fade-in_0.2s_ease-out]">
-          <span>✨ Report updated successfully</span>
+          <span>{toastMessage}</span>
         </div>
       )}
 
@@ -144,6 +217,14 @@ export function ReportChatView({
               isSidebarOpen={isSidebarOpen}
               hasMessages={messages.length > 0}
               onToggleChat={() => setIsChatOpen(false)}
+              versions={versions}
+              selectedVersionNumber={selectedVersionNumber}
+              onSelectVersion={setSelectedVersionNumber}
+              onUndoVersion={handleUndoVersion}
+              canUndoVersion={canUndoVersion}
+              historyLoading={historyLoading}
+              historyBusy={historyBusy}
+              historyError={historyError}
             />
           </div>
           <div className="w-[40%] h-full">
@@ -163,7 +244,7 @@ export function ReportChatView({
         </div>
       ) : (
         // VIEW 1: REPORT VIEW (Centered single layout, sticky bottom floating chat input)
-        <div className="w-full h-full relative overflow-y-auto pb-32">
+        <div className="w-full h-full relative overflow-y-auto ">
           <ReportPanel
             topic={topic}
             report={report}
@@ -177,6 +258,14 @@ export function ReportChatView({
             isSidebarOpen={isSidebarOpen}
             hasMessages={messages.length > 0}
             onToggleChat={() => setIsChatOpen(true)}
+            versions={versions}
+            selectedVersionNumber={selectedVersionNumber}
+            onSelectVersion={setSelectedVersionNumber}
+            onUndoVersion={handleUndoVersion}
+            canUndoVersion={canUndoVersion}
+            historyLoading={historyLoading}
+            historyBusy={historyBusy}
+            historyError={historyError}
           />
 
           {/* Sticky bottom floating input overlay */}
