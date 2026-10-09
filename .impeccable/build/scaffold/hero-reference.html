@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Scaffold reference: editorial-filmstrip.png</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display+SC:wght@700&display=swap">
+  <link rel="stylesheet" href="layout.css">
+  <style>html,body{margin:0}body{background:#f6f6f5}.region{box-sizing:border-box}.region.text p{white-space:pre-wrap}</style>
+</head>
+<body>
+<!-- Reference only. Every region sits at its measured box inside a comp-aspect frame. Take the boxes (layout.css), keep your own semantic structure. -->
+<main class="comp-frame" style="max-width:1586px">
+  <div class="r-brand region text" data-region="brand"><!-- ResearchAI. serif brand --><p style="font-size:var(--r-brand-font);line-height:1.05;margin:0">brand</p></div>
+  <div class="r-signin region control" data-region="signin"><!-- Sign in link: rebuild the control's chrome from the crop (comp-spec.mjs --crop signin); its ink box, border, fill, radius, and label size are the comp's --></div>
+  <div class="r-tabs region control" data-region="tabs"><!-- Normal and Deep research segmented tabs: rebuild the control's chrome from the crop (comp-spec.mjs --crop tabs); its ink box, border, fill, radius, and label size are the comp's --></div>
+  <div class="r-headline region text" data-region="headline"><!-- Every answer has a story. Large black serif headline --><p style="font-size:var(--r-headline-font);font-family:var(--r-headline-family),sans-serif;font-weight:var(--r-headline-weight);line-height:1.05;margin:0">headline</p></div>
+  <div class="r-intro region text" data-region="intro"><!-- Follow a question from search to sourced report. --><p style="font-size:var(--r-intro-font);line-height:1.05;margin:0">intro</p></div>
+  <div class="r-cta region control" data-region="cta"><!-- Yellow Start researching action: rebuild the control's chrome from the crop (comp-spec.mjs --crop cta); its ink box, border, fill, radius, and label size are the comp's --></div>
+  <figure class="r-city region plate" data-region="city"><img src="../../../frontend/src/assets/landing/city.png" alt="" style="width:100%;height:100%;object-fit:contain;object-position:top left"></figure>
+  <div class="r-sample-label region text" data-region="sample-label"><!-- Illustrative example label --><p style="font-size:var(--r-sample-label-font);line-height:1.05;margin:0">sample-label</p></div>
+  <div class="r-stage-title region text" data-region="stage-title"><!-- 01 Search the web title --><p style="font-size:var(--r-stage-title-font);line-height:1.05;margin:0">stage-title</p></div>
+  <div class="r-query region control" data-region="query"><!-- Read-only sample question How can cities stay cooler?: rebuild the control's chrome from the crop (comp-spec.mjs --crop query); its ink box, border, fill, radius, and label size are the comp's --></div>
+  <div class="r-sources region text" data-region="sources"><!-- Two illustrative numbered source excerpts --><p style="line-height:1.05;margin:0">sources</p></div>
+  <div class="r-filmstrip region control" data-region="filmstrip"><!-- Four stage navigation buttons with numbered headings and miniature semantic source and report UI; first preview reuses city artwork: rebuild the control's chrome from the crop (comp-spec.mjs --crop filmstrip); its ink box, border, fill, radius, and label size are the comp's --></div>
+  <div class="r-scroll region control" data-region="scroll"><!-- Scroll to follow the research link: rebuild the control's chrome from the crop (comp-spec.mjs --crop scroll); its ink box, border, fill, radius, and label size are the comp's --></div>
+</main>
+</body>
+</html>

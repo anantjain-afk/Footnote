@@ -1,0 +1,341 @@
+{
+  "tool": "build-phase",
+  "version": 2,
+  "startedAt": "2026-10-09T07:38:53.288Z",
+  "comp": ".impeccable/mocks/decision/editorial-filmstrip.png",
+  "direction": null,
+  "breakpoint": "1586x992",
+  "artifact": null,
+  "phase": "review",
+  "phases": {
+    "comps": {
+      "status": "skipped",
+      "openedAt": null,
+      "closedAt": null,
+      "attempts": 0,
+      "notes": [
+        {
+          "at": "2026-10-09T07:38:53.288Z",
+          "text": "started with an approved comp; the comp round happened before this state (surface round or manual)"
+        }
+      ],
+      "gate": null,
+      "forced": null
+    },
+    "spec": {
+      "status": "closed",
+      "openedAt": "2026-10-09T07:38:53.287Z",
+      "closedAt": "2026-10-09T07:42:29.573Z",
+      "attempts": 3,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "13 regions, 1 plates, 6 text regions measured",
+        "at": "2026-10-09T07:42:29.573Z"
+      },
+      "forced": null
+    },
+    "plates": {
+      "status": "closed",
+      "openedAt": "2026-10-09T07:42:29.573Z",
+      "closedAt": "2026-10-09T07:45:09.933Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "1/1 plates",
+        "at": "2026-10-09T07:45:09.933Z"
+      },
+      "forced": null
+    },
+    "hero": {
+      "status": "closed",
+      "openedAt": "2026-10-09T07:45:09.933Z",
+      "closedAt": "2026-10-09T09:02:42.729Z",
+      "attempts": 4,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "hero 77% (drift)",
+        "score": 0.7661,
+        "verdict": "drift",
+        "report": ".impeccable/review/diff/hero/report.json",
+        "sideBySide": "/Users/anantjain/Desktop/Projects/Year2 Projects/ReserchAgent/.impeccable/review/diff/hero/side-by-side.png",
+        "worst": [
+          "headline drift 60%",
+          "intro drift 60%",
+          "stage-title drift 63%"
+        ],
+        "worstIds": [
+          "headline",
+          "intro",
+          "stage-title"
+        ],
+        "worstCrops": [
+          {
+            "id": "headline",
+            "verdict": "drift",
+            "score": {
+              "overall": 0.5958,
+              "structure": 0.4411,
+              "color": 0.899,
+              "colorIntersection": 0.839,
+              "paletteMatch": 0.9313,
+              "detail": 0.6518,
+              "detailRaw": 0.6726,
+              "detailAdded": 0.0417,
+              "bands": 0.5273
+            },
+            "file": ".impeccable/review/diff/hero/regions/headline.png"
+          },
+          {
+            "id": "intro",
+            "verdict": "drift",
+            "score": {
+              "overall": 0.6025,
+              "structure": 0.6574,
+              "color": 0.9059,
+              "colorIntersection": 0.8285,
+              "paletteMatch": 0.9476,
+              "detail": 0.1972,
+              "detailRaw": 0.317,
+              "detailAdded": 0.2396,
+              "bands": 0.1778
+            },
+            "file": ".impeccable/review/diff/hero/regions/intro.png"
+          },
+          {
+            "id": "stage-title",
+            "verdict": "drift",
+            "score": {
+              "overall": 0.6269,
+              "structure": 0.5661,
+              "color": 0.9171,
+              "colorIntersection": 0.846,
+              "paletteMatch": 0.9555,
+              "detail": 0.4538,
+              "detailRaw": 0.4903,
+              "detailAdded": 0.0729,
+              "bands": 0.465
+            },
+            "file": ".impeccable/review/diff/hero/regions/stage-title.png"
+          }
+        ],
+        "advisories": [
+          "(advisory, above the 72% bar; fix in the polish pass before responsive) 5 readings:",
+          "  text intro: cap height 18.2px in the build, 39px in the comp (-53%); set font-size so the cap height renders at 39px",
+          "  text sample-label: cap height 23.1px in the build, 30px in the comp (-23%); set font-size so the cap height renders at 30px",
+          "  text stage-title: letter-spacing is wider than the comp's (gap 0.085 vs 0.047 of the cap height); set letter-spacing to close it by about 2px",
+          "  text stage-title: the face renders 57% lighter than the comp's (ink density 0.30 vs 0.69); raise a weight step or use the ranked face",
+          "  text sources: ink is #909090 in the build, #40ad9f in the comp; use the comp's colour",
+          "(advisory, unchanged for 3+ attempts) text brand: ink is #b8b8b8 in the build, #0b0b0b in the comp; use the comp's colour"
+        ],
+        "regionVerdicts": {
+          "brand": "match",
+          "signin": "drift",
+          "tabs": "match",
+          "headline": "drift",
+          "intro": "drift",
+          "cta": "drift",
+          "city": "drift",
+          "sample-label": "drift",
+          "stage-title": "drift",
+          "query": "drift",
+          "sources": "drift",
+          "filmstrip": "drift",
+          "scroll": "drift"
+        },
+        "at": "2026-10-09T09:02:42.728Z"
+      },
+      "forced": null,
+      "readingsSeen": {
+        "text headline: letter-spacing is tighter than the comp's (gap 0.035 vs 0.088 of the cap height); set letter-spacing to open it by about 4px": 1,
+        "text intro: cap height 19.4px in the build, 39px in the comp (-50%); set font-size so the cap height renders at 39px": 1,
+        "text sample-label: cap height 23px in the build, 30px in the comp (-23%); set font-size so the cap height renders at 30px": 1,
+        "text stage-title: the face renders 56% lighter than the comp's (ink density 0.30 vs 0.69); raise a weight step or use the ranked face": 1,
+        "text brand: ink is #b8b8b8 in the build, #0b0b0b in the comp; use the comp's colour": 4,
+        "text sample-label: ink is #7848d8 in the build, #afafb0 in the comp; use the comp's colour": 1,
+        "text sources: ink is #1a1a10 in the build, #40ad9f in the comp; use the comp's colour": 1,
+        "text stage-title: it starts 74px further right than in the comp": 1,
+        "control query: its rule sits 70px into the box in the comp and 52px in the build (-18px), so the strip is shorter than the comp's; match the height, not only the position": 1,
+        "text intro: cap height 18.2px in the build, 39px in the comp (-53%); set font-size so the cap height renders at 39px": 3,
+        "text sample-label: cap height 23.1px in the build, 30px in the comp (-23%); set font-size so the cap height renders at 30px": 3,
+        "text stage-title: letter-spacing is wider than the comp's (gap 0.085 vs 0.047 of the cap height); set letter-spacing to close it by about 2px": 3,
+        "text stage-title: the face renders 57% lighter than the comp's (ink density 0.30 vs 0.69); raise a weight step or use the ranked face": 3,
+        "text sources: ink is #1b1b12 in the build, #40ad9f in the comp; use the comp's colour": 1,
+        "text sources: ink is #909090 in the build, #40ad9f in the comp; use the comp's colour": 2
+      },
+      "records": 1,
+      "history": [
+        {
+          "at": "2026-10-09T08:17:39.748Z",
+          "score": 0.7134,
+          "worstIds": [
+            "headline",
+            "intro",
+            "city"
+          ],
+          "regionVerdicts": {
+            "brand": "match",
+            "signin": "drift",
+            "tabs": "match",
+            "headline": "drift",
+            "intro": "contradicted",
+            "cta": "match",
+            "city": "drift",
+            "sample-label": "drift",
+            "stage-title": "drift",
+            "query": "drift",
+            "sources": "drift",
+            "filmstrip": "drift",
+            "scroll": "drift"
+          },
+          "artifactHash": null
+        },
+        {
+          "at": "2026-10-09T09:00:23.567Z",
+          "score": 0.7501,
+          "worstIds": [
+            "headline",
+            "query",
+            "intro"
+          ],
+          "regionVerdicts": {
+            "brand": "match",
+            "signin": "drift",
+            "tabs": "match",
+            "headline": "drift",
+            "intro": "drift",
+            "cta": "drift",
+            "city": "drift",
+            "sample-label": "drift",
+            "stage-title": "drift",
+            "query": "contradicted",
+            "sources": "drift",
+            "filmstrip": "drift",
+            "scroll": "drift"
+          },
+          "artifactHash": null
+        },
+        {
+          "at": "2026-10-09T09:02:13.712Z",
+          "score": 0.7661,
+          "worstIds": [
+            "query",
+            "headline",
+            "intro"
+          ],
+          "regionVerdicts": {
+            "brand": "match",
+            "signin": "drift",
+            "tabs": "match",
+            "headline": "drift",
+            "intro": "drift",
+            "cta": "drift",
+            "city": "drift",
+            "sample-label": "drift",
+            "stage-title": "drift",
+            "query": "contradicted",
+            "sources": "drift",
+            "filmstrip": "drift",
+            "scroll": "drift"
+          },
+          "artifactHash": null
+        },
+        {
+          "at": "2026-10-09T09:02:42.729Z",
+          "score": 0.7661,
+          "worstIds": [
+            "headline",
+            "intro",
+            "stage-title"
+          ],
+          "regionVerdicts": {
+            "brand": "match",
+            "signin": "drift",
+            "tabs": "match",
+            "headline": "drift",
+            "intro": "drift",
+            "cta": "drift",
+            "city": "drift",
+            "sample-label": "drift",
+            "stage-title": "drift",
+            "query": "drift",
+            "sources": "drift",
+            "filmstrip": "drift",
+            "scroll": "drift"
+          },
+          "artifactHash": null
+        }
+      ]
+    },
+    "sections": {
+      "status": "closed",
+      "openedAt": "2026-10-09T09:02:42.729Z",
+      "closedAt": "2026-10-09T09:02:52.635Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "no mechanical gate",
+        "at": "2026-10-09T09:02:52.635Z"
+      },
+      "forced": null
+    },
+    "motion": {
+      "status": "closed",
+      "openedAt": "2026-10-09T09:02:52.635Z",
+      "closedAt": "2026-10-09T09:03:34.994Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "no mechanical gate",
+        "at": "2026-10-09T09:03:34.994Z"
+      },
+      "forced": null
+    },
+    "responsive": {
+      "status": "closed",
+      "openedAt": "2026-10-09T09:03:34.994Z",
+      "closedAt": "2026-10-09T09:05:11.766Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "desktop 77% (drift)",
+        "score": 0.7675,
+        "sideBySide": "/Users/anantjain/Desktop/Projects/Year2 Projects/ReserchAgent/.impeccable/review/diff/desktop/side-by-side.png",
+        "at": "2026-10-09T09:05:11.765Z"
+      },
+      "forced": null
+    },
+    "review": {
+      "status": "closed",
+      "openedAt": "2026-10-09T09:05:11.766Z",
+      "closedAt": "2026-10-09T09:36:53.467Z",
+      "attempts": 0,
+      "notes": [],
+      "gate": null,
+      "forced": null
+    }
+  },
+  "finish": {
+    "disposition": "ship",
+    "at": "2026-10-09T09:36:53.467Z",
+    "phaseAtFinish": "review"
+  },
+  "plates": {
+    "city": {
+      "status": "ok",
+      "score": 0.604,
+      "size": "1041x1510"
+    }
+  }
+}

@@ -11,15 +11,15 @@ Landing: Persuade. Sign-in and dashboard: Operate. Extend the existing report's 
 
 ## Direction contract
 
-THESIS: Carry the report's reading experience through the front door. Public visitors learn the workflow; returning users start or resume research immediately.
+THESIS: Research unfolds as an editorial filmstrip. A visitor follows a question through the product's actual research stages and into a sourced report.
 
 OWN-WORLD: White canvas, black text, gray hairlines; existing Playfair Display headings, Lora prose, Inter controls. Flat rectangular inputs and buttons. User-requested refinements add teal text selection, yellow research actions, and restrained purple authentication accents.
 
 STORY: A question becomes a sourced report, then a conversation. Visitors create an account or sign in; authenticated users see their own history.
 
-FIRST VIEWPORT: Landing has a restrained masthead, left-aligned editorial headline and action, alongside an explicitly illustrative report excerpt. Sign-in is a quiet two-column introduction and compact form. Dashboard places the research composer above a session list.
+FIRST VIEWPORT: Small masthead; Normal/Deep tabs above an oversized left serif headline and yellow signup action; right research frame with a cut-paper city collage, sample question, stage title and source excerpts. Four colorful chapter previews span the lower edge. Match the approved editorial-filmstrip.png composition.
 
-FORM: Direct extension of the user's pinned report style, code-led. No seed: precise incumbent-matching request. Native navigation and clear form states carry interaction.
+FORM: Editorial Filmstrip, grounded candidate 4, surface seed 079b7ea0. User approved .impeccable/mocks/decision/editorial-filmstrip.png and authorized implementation. Comp first; scrolling advances four stages, while tabs switch the normal/deep flow. Playfair Display, Lora and Inter remain recognizable. Illustration is labeled; Deep research explains its Firecrawl key requirement. Mobile and reduced motion retain readable stages and direct chapter controls.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
