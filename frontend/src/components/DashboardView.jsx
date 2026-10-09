@@ -9,7 +9,7 @@ function sessionDate(value) {
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-export default function DashboardView({ onSubmit, onSelectSession, sessions, loadingSessions, historyError, onRetryHistory, cooldownSeconds = 0, initialTopic = '', initialMode = 'normal' }) {
+export default function DashboardView({ onSubmit, onSelectSession, onOpenSettings, deepKeyMissing = false, settingsCheckError = '', sessions, loadingSessions, historyError, onRetryHistory, cooldownSeconds = 0, initialTopic = '', initialMode = 'normal' }) {
   const [topic, setTopic] = useState(initialTopic)
   const [mode, setMode] = useState(initialMode)
   const [filter, setFilter] = useState('')
@@ -32,6 +32,8 @@ export default function DashboardView({ onSubmit, onSelectSession, sessions, loa
             <div className="research-input-row"><input id="research-topic-input" value={topic} onChange={event => setTopic(event.target.value)} placeholder="What would you like to research today?" required /><button className="entry-button entry-button-research" type="submit" disabled={!topic.trim() || cooldownSeconds > 0}>Research <ArrowRight size={17} aria-hidden="true" /></button></div>
             <fieldset className="research-modes"><legend className="sr-only">Research mode</legend><label><input type="radio" name="mode" value="normal" checked={mode === 'normal'} onChange={() => setMode('normal')} />Normal</label><label><input type="radio" name="mode" value="deep_research" checked={mode === 'deep_research'} onChange={() => setMode('deep_research')} />Deep research</label></fieldset>
             <p className="entry-caption">{mode === 'normal' ? 'A focused report on your topic, with sources to explore.' : 'A broader investigation with sub-questions and multiple rounds of research.'}</p>
+            {mode === 'deep_research' && deepKeyMissing && <p className="entry-notice deep-key-notice" role="alert">Deep Research requires your own Firecrawl API key. Add yours in <a href="#settings" onClick={onOpenSettings}>Settings → API Keys</a> to use this mode.</p>}
+            {mode === 'deep_research' && settingsCheckError && <p className="entry-notice" role="alert">{settingsCheckError}</p>}
             {cooldownSeconds > 0 && <p role="status" className="entry-notice">Report limit reached. {cooldownMessage(cooldownSeconds)}</p>}
           </form>
         </section>

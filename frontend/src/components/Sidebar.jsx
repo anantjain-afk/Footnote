@@ -1,4 +1,4 @@
-import { Trash2, Loader2, PanelLeft, PanelLeftClose, SquarePen, Zap, Brain } from "lucide-react";
+import { Trash2, Loader2, PanelLeft, PanelLeftClose, SquarePen, Zap, Brain, Settings2 } from "lucide-react";
 
 // Removed StatusBadge component per user request
 
@@ -33,6 +33,8 @@ export function Sidebar({
   onRemoveSession,
   onDeleteSession,
   onNewResearch,
+  onOpenSettings,
+  settingsActive,
   email,
   onSignOut,
   signingOut,
@@ -50,7 +52,7 @@ export function Sidebar({
     <>
       {/* Floating buttons when sidebar is closed */}
       <div 
-        className={`fixed top-3 left-3 z-50 flex flex-col gap-2 transition-all duration-300 ${
+        className={`fixed top-3 left-3 z-50 flex flex-col gap-3 transition-all duration-300 ${
           isOpen ? 'opacity-0 pointer-events-none -translate-x-4' : 'opacity-100 pointer-events-auto translate-x-0'
         }`}
       >
@@ -167,6 +169,10 @@ export function Sidebar({
         )}
       </div>
           <div className="border-t border-black/10 px-5 py-4 relative z-10">
+            <button type="button" onClick={onOpenSettings} aria-current={settingsActive ? 'page' : undefined}
+              className={`mb-3 flex w-full min-h-11 items-center gap-2.5 px-2 text-sm font-medium transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-purple-800 focus-visible:outline-offset-2 ${settingsActive ? 'bg-purple-100 text-purple-900' : 'text-black/70 hover:bg-black/5 hover:text-black'}`}>
+              <Settings2 size={17} aria-hidden="true" /> Settings
+            </button>
             <p className="truncate text-sm text-black/60" title={email}>{email}</p>
             <button type="button" onClick={onSignOut} disabled={signingOut}
               className="mt-2 min-h-11 text-sm underline decoration-purple-300 decoration-2 underline-offset-4 hover:text-purple-800 hover:decoration-purple-800 focus-visible:outline-2 focus-visible:outline-purple-800 focus-visible:outline-offset-4 disabled:opacity-50 cursor-pointer">

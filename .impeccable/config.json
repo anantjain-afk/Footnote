@@ -1,0 +1,15 @@
+{
+  "buildPath": "comp",
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-10-08T05:45:13.130Z",
+        "reason": "Agent: Inter is the existing global UI font in frontend/src/index.css; the settings addition inherits the established app typography"
+      }
+    ]
+  }
+}

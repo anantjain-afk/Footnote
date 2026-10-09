@@ -7,10 +7,13 @@ from urllib.parse import urlparse
 from collections import Counter
 from pydantic import BaseModel, Field
 from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
 
 from ....core.logging import get_logger
 from ....core.config import settings
-from ....services.firecrawl import firecrawl
+from ....services.firecrawl import client_for_key
+from ....core.database import get_pool
+from ....core.user_settings import resolve_firecrawl_key
 from ....services.groq import llm
 from ..state import SubQuestionState
 from ...research.nodes.search import _search_with_retry
@@ -92,7 +95,7 @@ def _hash_key(text: str) -> str:
 
 # ── Main node ─────────────────────────────────────────────────────────────────
 
-async def research_sub_question(state: SubQuestionState) -> dict:
+async def research_sub_question(state: SubQuestionState, config: RunnableConfig) -> dict:
     sub_q = state["sub_question"]
     original_sq_id = state.get("original_sq_id", sub_q)
     seen_urls = state.get("seen_urls", [])
@@ -131,6 +134,10 @@ async def research_sub_question(state: SubQuestionState) -> dict:
     sources = []
     
     if urls:
+        user_id = config["configurable"]["user_id"]
+        async with get_pool().acquire() as db:
+            api_key = await resolve_firecrawl_key(db, user_id, "deep_research")
+        firecrawl = client_for_key(api_key)
         tasks = []
         for url in urls:
             scrape_key = f"scrape_{_hash_key(url)}"
@@ -144,7 +151,7 @@ async def research_sub_question(state: SubQuestionState) -> dict:
 
         for url, result in zip(urls, results):
             if isinstance(result, Exception):
-                logger.warning(f"Extraction failed for {url}: {result}")
+                logger.warning(f"Extraction failed for {url} ({type(result).__name__})")
                 continue
                 
             # Handle cached result vs real result

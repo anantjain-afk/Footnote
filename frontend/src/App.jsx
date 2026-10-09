@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import DashboardView from './components/DashboardView'
+import SettingsView from './components/SettingsView'
 import LandingView from './components/LandingView'
 import LoadingView from './components/LoadingView'
 import DeepResearchLoadingView from './components/DeepResearchLoadingView'
@@ -9,6 +10,7 @@ import { Sidebar } from './components/Sidebar'
 import { useSessionHistory } from './hooks/useSessionHistory'
 import { useResearchStream } from './hooks/useResearchStream'
 import { createSession, getSession } from './api/sessions'
+import { getUserSettings } from './api/userSettings'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from './context/useAuth'
 import Login from './components/Login'
@@ -44,7 +46,9 @@ function AuthenticatedApp() {
   const [errorStatus, setErrorStatus] = useState(null)
   const [signingOut, setSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState(null)
-  const [view, setView] = useState('dashboard') // 'dashboard' | 'loading' | 'report' | 'error' | 'session_loading'
+  const [view, setView] = useState(() => window.location.hash === '#settings' ? 'settings' : 'dashboard')
+  const [deepKeyMissing, setDeepKeyMissing] = useState(false)
+  const [settingsCheckError, setSettingsCheckError] = useState('')
   const [mode, setMode] = useState('normal')
   const [activeSessionId, setActiveSessionId] = useState(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -53,6 +57,27 @@ function AuthenticatedApp() {
   const [sources, setSources] = useState([])
   const [errorMsg, setErrorMsg] = useState('')
   const [generatedAt, setGeneratedAt] = useState('')
+
+  useEffect(() => {
+    const syncHash = () => setView(previous => {
+      if (window.location.hash === '#settings') return 'settings'
+      return previous === 'settings' ? 'dashboard' : previous
+    })
+    window.addEventListener('hashchange', syncHash)
+    return () => window.removeEventListener('hashchange', syncHash)
+  }, [])
+
+  const openSettings = () => {
+    window.location.hash = 'settings'
+    setView('settings')
+    setIsSidebarOpen(false)
+  }
+
+  const clearSettingsHash = () => {
+    if (window.location.hash === '#settings') {
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+    }
+  }
 
   const { sessions, loading: loadingSessions, error: historyError, refresh, removeSession } = useSessionHistory()
 
@@ -90,13 +115,28 @@ function AuthenticatedApp() {
     setErrorStatus(null)
     setTopic(searchTopic)
     setMode(searchMode)
-    setView('loading')
+    setDeepKeyMissing(false)
+    setSettingsCheckError('')
     setErrorMsg('')
     setReportData('')
     setSources([])
-    setActiveSessionId(null)
 
     try {
+      if (searchMode === 'deep_research') {
+        let keyStatus
+        try {
+          keyStatus = await getUserSettings()
+        } catch {
+          setSettingsCheckError('Could not check your Firecrawl key. Please try again.')
+          return
+        }
+        if (!keyStatus.has_firecrawl_key) {
+          setDeepKeyMissing(true)
+          return
+        }
+      }
+      setActiveSessionId(null)
+      setView('loading')
       const data = await createSession(searchTopic, searchMode);
       if (data && data.session_id) {
         setActiveSessionId(data.session_id);
@@ -106,6 +146,11 @@ function AuthenticatedApp() {
         throw new Error("Invalid response format. Expected JSON containing session_id.");
       }
     } catch (err) {
+      if (searchMode === 'deep_research' && err.status === 400) {
+        setDeepKeyMissing(true)
+        setView('dashboard')
+        return
+      }
       console.error('Research error:', err);
       quotas.record('reports', err);
       setErrorStatus(err.status);
@@ -130,6 +175,7 @@ function AuthenticatedApp() {
   }
 
   const handleSelectSession = async (sessionId) => {
+    clearSettingsHash()
     setErrorStatus(null)
 
     setActiveSessionId(sessionId);
@@ -159,7 +205,10 @@ function AuthenticatedApp() {
   };
 
   const handleReset = () => {
+    clearSettingsHash()
     setErrorStatus(null)
+    setDeepKeyMissing(false)
+    setSettingsCheckError('')
     setView('dashboard')
     setActiveSessionId(null)
     setTopic('')
@@ -167,6 +216,13 @@ function AuthenticatedApp() {
     setSources([])
     setErrorMsg('')
     setGeneratedAt('')
+  }
+
+  const handleBackFromSettings = () => {
+    clearSettingsHash()
+    setDeepKeyMissing(false)
+    setSettingsCheckError('')
+    setView('dashboard')
   }
 
   const handleRemoveActive = () => {
@@ -195,6 +251,8 @@ function AuthenticatedApp() {
         onRemoveSession={handleRemoveActive}
         onDeleteSession={removeSession}
         onNewResearch={handleReset}
+        onOpenSettings={openSettings}
+        settingsActive={view === 'settings'}
         email={user.email}
         onSignOut={handleSignOut}
         signingOut={signingOut}
@@ -213,8 +271,13 @@ function AuthenticatedApp() {
             initialTopic={topic}
             initialMode={mode}
             onSubmit={handleResearch}
+            onOpenSettings={openSettings}
+            deepKeyMissing={deepKeyMissing}
+            settingsCheckError={settingsCheckError}
           />
         )}
+
+        {view === 'settings' && <SettingsView onBack={handleBackFromSettings} onKeyChange={() => { setDeepKeyMissing(false); setSettingsCheckError('') }} />}
         
         {view === 'loading' && (
           mode === 'deep_research' ? (

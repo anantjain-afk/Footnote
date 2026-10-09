@@ -8,7 +8,12 @@ export async function createSession(topic, mode = 'normal') {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ topic, mode }),
   });
-  if (!res.ok) throw new Error("Failed to create session");
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const error = new Error(typeof body.detail === 'string' ? body.detail : 'Failed to create session');
+    error.status = res.status;
+    throw error;
+  }
   return res.json(); // { session_id }
 }
 

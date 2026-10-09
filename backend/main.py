@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .core.database import init_db_pool, close_db_pool
 from .api.sessions import router as sessions_router
 from .api.chat import router as chat_router
+from .api.user_settings import router as user_settings_router
 from contextlib import asynccontextmanager
 from .core.rate_limit import create_rate_limiter, RateLimitError, rate_limit_error_handler
 
@@ -38,6 +39,7 @@ app.add_middleware(
 app.include_router(chat_router , prefix = '/api') 
 app.include_router(sessions_router , prefix="/api")
 app.include_router(report_router, prefix="/api")
+app.include_router(user_settings_router, prefix="/api")
 
 
 @app.get("/health/ready")

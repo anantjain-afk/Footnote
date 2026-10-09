@@ -130,15 +130,16 @@ export function ReportPanel({
           {/* Export PDF Button */}
           <button
             onClick={onExportPdf}
-            disabled={exporting}
-            className="flex items-center space-x-2 px-3 py-2 bg-black hover:bg-black/80 disabled:bg-black/10 disabled:text-black/40 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-all duration-200 cursor-pointer"
+            disabled={exporting || Boolean(pendingChange)}
+            title={pendingChange ? 'Approve or reject the proposed changes before exporting' : undefined}
+            className="flex items-center space-x-2 px-3 py-2 bg-purple-500 hover:bg-purple-600 disabled:bg-black/10 disabled:text-black/40 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-all duration-200 cursor-pointer"
           >
             {exporting ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
               <FileDown className="w-3.5 h-3.5" />
             )}
-            <span>{exporting ? 'Exporting...' : 'Export PDF'}</span>
+            <span>{exporting ? 'Exporting...' : selectedVersion ? `Export v${selectedVersion.version_number} PDF` : 'Export PDF'}</span>
           </button>
 
           {/* Toggle Chat Button */}

@@ -58,6 +58,26 @@ The browser uses `VITE_SUPABASE_URL` in `frontend/.env`. The backend uses
 project. Keep the existing public anon key in the frontend. Legacy HS256 tokens
 use the backend's JWT secret; ES256/RS256 tokens use Supabase's public signing keys.
 
+## Firecrawl keys in user settings
+
+Apply [`migrations/20261008_firecrawl_user_settings.sql`](migrations/20261008_firecrawl_user_settings.sql)
+to the Supabase database. It creates `public.users`, linked to `auth.users`, and
+enables row level security with no browser read policy. The backend uses its
+Postgres connection for profile access.
+
+Generate a separate encryption key and set `FIRECRAWL_KEY_ENCRYPTION_KEY` in the
+backend environment (never in a `VITE_` variable):
+
+```sh
+.venv/bin/python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'
+```
+
+Keep this value stable and backed up: changing it makes already saved user keys
+unreadable. The existing `FIRECRAWL_API_KEY` remains the normal-mode fallback.
+Deep Research requires a saved user key. The settings API returns only
+`has_firecrawl_key`; ciphertext stays in `public.users` and decryption happens
+only in the backend extraction nodes.
+
 ## Verification
 
 ```sh

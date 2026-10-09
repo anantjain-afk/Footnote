@@ -1,0 +1,43 @@
+{
+  "title": "Choose the landing-page composition",
+  "question": "Which version makes the live research process feel like the art of the page?",
+  "options": [
+    {
+      "id": "evidence-orbit",
+      "label": "Evidence Orbit",
+      "kicker": "THE ROLL",
+      "lineage": "editorial evidence maps",
+      "thesis": "One question gathers visible sources, then resolves into a report as you scroll.",
+      "palette": ["#ffffff", "#101014", "#2dd4bf", "#facc15", "#a855f7"],
+      "materials": ["editorial type", "source annotations", "precise connecting lines"],
+      "viewport": "A huge serif question faces an open evidence field; Normal and Deep tabs change its topology.",
+      "risk": "The evidence field could feel abstract unless source labels and research stages stay readable.",
+      "comp": ".impeccable/mocks/decision/evidence-orbit-v2.png"
+    },
+    {
+      "id": "split-research-desk",
+      "label": "Split Research Desk",
+      "lineage": "a researcher’s working table",
+      "thesis": "A persistent question sits beside a changing research workspace.",
+      "palette": ["#ffffff", "#101014", "#2dd4bf", "#facc15", "#a855f7"],
+      "materials": ["overscale serif type", "report fragments", "color-coded progress"],
+      "viewport": "Left: the question and invitation. Right: live search, source, and review panels advanced by scroll.",
+      "risk": "Its clear split can look conventional unless the workspace has a distinctive composition and motion.",
+      "comp": ".impeccable/mocks/decision/split-research-desk.png"
+    },
+    {
+      "id": "editorial-filmstrip",
+      "label": "Editorial Filmstrip",
+      "lineage": "large-format editorial storyboards",
+      "thesis": "Research unfolds as a sequence of richly typeset frames, each showing a real stage.",
+      "palette": ["#ffffff", "#101014", "#2dd4bf", "#facc15", "#a855f7"],
+      "materials": ["poster-scale headings", "source slips", "report-page details"],
+      "viewport": "A wide first frame opens the question; the next colored frames preview search, reading, writing, and review.",
+      "risk": "The sequence needs careful mobile pacing so the product remains clear within the first screen.",
+      "comp": ".impeccable/mocks/decision/editorial-filmstrip.png"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "steer": true,
+  "buildPath": { "value": "comp", "toggle": true }
+}

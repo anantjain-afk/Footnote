@@ -11,6 +11,7 @@ from ..graph.research.builder import build_graph
 from ..core.sse import get_queue, remove_queue, publish_event, format_sse_event
 from ..core.logging import get_logger
 from ..services.report_versions import save_initial_report_version, list_report_versions, append_report_version
+from ..core.user_settings import resolve_firecrawl_key
 
 logger = get_logger(__name__)
 
@@ -27,7 +28,7 @@ class ApproveReportVersionRequest(BaseModel):
 
 
 # ── BACKGROUND TASK ───────────────────────────────────────────────────────────
-async def run_research_pipeline(session_id: str, topic: str):
+async def run_research_pipeline(session_id: str, topic: str, user_id: str):
     async with get_checkpointer() as checkpointer:
         graph = build_graph(checkpointer)
         final_report = ""
@@ -35,7 +36,7 @@ async def run_research_pipeline(session_id: str, topic: str):
 
         try:
             # Use LangGraph's astream_events to get real-time node progress
-            config = {"configurable": {"thread_id": session_id}}
+            config = {"configurable": {"thread_id": session_id, "user_id": user_id}}
             async for event in graph.astream_events({"topic": topic}, config=config, version="v2"):
                 kind = event["event"]
                 name = event["name"]
@@ -93,13 +94,13 @@ async def run_research_pipeline(session_id: str, topic: str):
             await publish_event(session_id, "complete", {"report": final_report, "sources": final_sources})
 
         except Exception as e:
-            logger.error(f"Pipeline failed for session {session_id}: {e}", exc_info=True)
+            logger.error(f"Pipeline failed for session {session_id} ({type(e).__name__})")
             async with get_pool().acquire() as conn:
                 await conn.execute(
                     "UPDATE research_sessions SET status='failed' WHERE id=$1",
                     session_id
                 )
-            await publish_event(session_id, "error", {"detail": str(e)})
+            await publish_event(session_id, "error", {"detail": "Research failed. Please try again."})
 
         finally:
             # Wait a moment to ensure frontend receives the final complete/error message before dropping queue
@@ -107,7 +108,7 @@ async def run_research_pipeline(session_id: str, topic: str):
             remove_queue(session_id)
 
 
-async def run_deep_research_pipeline(session_id: str, topic: str):
+async def run_deep_research_pipeline(session_id: str, topic: str, user_id: str):
     from ..graph.deep_research.builder import build_deep_research_graph
     async with get_checkpointer() as checkpointer:
         graph = build_deep_research_graph(checkpointer)
@@ -123,7 +124,7 @@ async def run_deep_research_pipeline(session_id: str, topic: str):
         }
 
         try:
-            config = {"configurable": {"thread_id": session_id}}
+            config = {"configurable": {"thread_id": session_id, "user_id": user_id}}
             async for event in graph.astream_events({"topic": topic}, config=config, version="v2"):
                 kind = event["event"]
                 name = event["name"]
@@ -248,13 +249,13 @@ async def run_deep_research_pipeline(session_id: str, topic: str):
             })
 
         except Exception as e:
-            logger.error(f"Deep Research Pipeline failed for session {session_id}: {e}", exc_info=True)
+            logger.error(f"Deep Research Pipeline failed for session {session_id} ({type(e).__name__})")
             async with get_pool().acquire() as conn:
                 await conn.execute(
                     "UPDATE research_sessions SET status='failed' WHERE id=$1",
                     session_id
                 )
-            await publish_event(session_id, "error", {"detail": str(e)})
+            await publish_event(session_id, "error", {"detail": "Deep Research failed. Please try again."})
 
         finally:
             await asyncio.sleep(2)
@@ -267,6 +268,10 @@ from ..core.rate_limit import get_rate_limiter
 # ── CREATE ────────────────────────────────────────────────────────────────────
 @router.post("", status_code=201)
 async def create_session(request: Request, body: CreateSessionRequest, background_tasks: BackgroundTasks, user: User = Depends(get_current_user), db: asyncpg.Connection = Depends(get_db)):
+    if body.mode not in ("normal", "deep_research"):
+        raise HTTPException(400, "Invalid research mode.")
+    if body.mode == "deep_research":
+        await resolve_firecrawl_key(db, user.id, "deep_research")
     await get_rate_limiter(request).consume(user.id, "reports")
     session_id = str(uuid.uuid4())
 
@@ -278,9 +283,9 @@ async def create_session(request: Request, body: CreateSessionRequest, backgroun
 
     # Launch background task for graph execution
     if body.mode == "deep_research":
-        background_tasks.add_task(run_deep_research_pipeline, session_id, body.topic)
+        background_tasks.add_task(run_deep_research_pipeline, session_id, body.topic, user.id)
     else:
-        background_tasks.add_task(run_research_pipeline, session_id, body.topic)
+        background_tasks.add_task(run_research_pipeline, session_id, body.topic, user.id)
 
     # Return immediately, don't wait for report
     return {"session_id": session_id}

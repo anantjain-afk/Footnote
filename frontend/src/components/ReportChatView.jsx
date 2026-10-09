@@ -195,11 +195,15 @@ export function ReportChatView({
 
   const latestVersion = versions.at(-1)
   const previousVersions = latestVersion ? versions.slice(0, -1) : []
+  const selectedVersion = previousVersions.find(
+    (version) => version.version_number === selectedVersionNumber
+  )
 
   const handleExportPdf = async () => {
+    if (pendingChange || exporting) return
     setExporting(true)
     try {
-      await exportReportPDF(topic, report, sources)
+      await exportReportPDF(topic, selectedVersion ? selectedVersion.content : report, sources)
     } catch (e) {
       console.error('PDF export failed:', e)
     } finally {

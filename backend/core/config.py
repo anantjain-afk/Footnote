@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     # ── Search & Scraping ─────────────────────────────────────────────────
     tavily_api_key: str
     firecrawl_api_key: str
+    # A separate, stable Fernet key for encrypting user-owned Firecrawl keys.
+    firecrawl_key_encryption_key: str = ""
 
     # ── Observability ─────────────────────────────────────────────────────
     langchain_tracing_v2: bool = False

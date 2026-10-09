@@ -1,6 +1,9 @@
 import time
 import asyncio
-from ....services.firecrawl import firecrawl
+from langchain_core.runnables import RunnableConfig
+from ....services.firecrawl import client_for_key
+from ....core.database import get_pool
+from ....core.user_settings import resolve_firecrawl_key
 from ....core.logging import get_logger
 from ....core.config import settings
 from ..state import State
@@ -22,7 +25,7 @@ def clean_extracted(text: str) -> str:
     return "\n".join(cleaned)
 
 
-async def extract_contents(state: State) -> dict:
+async def extract_contents(state: State, config: RunnableConfig) -> dict:
     """Extracts content from discovered URLs in parallel with error resilience."""
     urls = state["urls"]
     start = time.time()
@@ -32,6 +35,10 @@ async def extract_contents(state: State) -> dict:
         extra={"node": "extract_contents"},
     )
 
+    user_id = config["configurable"]["user_id"]
+    async with get_pool().acquire() as db:
+        api_key = await resolve_firecrawl_key(db, user_id, "normal")
+    firecrawl = client_for_key(api_key)
     tasks = [firecrawl.scrape(url, formats=["markdown"]) for url in urls]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -41,8 +48,8 @@ async def extract_contents(state: State) -> dict:
     for url, result in zip(urls, results):
         if isinstance(result, Exception):
             logger.warning(
-                f"Extraction failed for {url}: {result}",
-                extra={"node": "extract_contents", "error": str(result)},
+                f"Extraction failed for {url} ({type(result).__name__})",
+                extra={"node": "extract_contents"},
             )
             continue
         # Use configurable max chars instead of hardcoded 1000
