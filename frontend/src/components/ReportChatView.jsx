@@ -223,8 +223,8 @@ export function ReportChatView({
       {/* Main layouts switcher */}
       {isChatOpen ? (
         // VIEW 2: SPLIT VIEW (Left Report 60%, Right Chat 40%)
-        <div className="w-full h-full flex overflow-hidden">
-          <div className="w-[60%] h-full relative">
+        <div className="report-chat-layout w-full h-full flex overflow-hidden">
+          <div className="report-chat-report w-[60%] h-full relative">
             <ReportPanel
               topic={topic}
               report={report}
@@ -250,8 +250,9 @@ export function ReportChatView({
               historyError={historyError}
             />
           </div>
-          <div className="w-[40%] h-full">
+          <div className="report-chat-panel w-[40%] h-full">
             <ChatPanel
+              hasPendingChanges={Boolean(pendingChange)}
               notice={inputNotice}
               submitDisabled={cooldownSeconds > 0 || Boolean(pendingChange)}
               messages={messages}
@@ -294,20 +295,22 @@ export function ReportChatView({
           />
 
           {/* Sticky bottom floating input overlay */}
-          <div className="absolute bottom-6 left-0 right-0 z-10 flex justify-center pointer-events-none">
-  <div className="relative w-full max-w-2xl pointer-events-auto">
-    <ChatInput
-      submitDisabled={cooldownSeconds > 0 || Boolean(pendingChange)}
-      notice={inputNotice}
-      value={inputValue}
-      onChange={setInputValue}
-      onSubmit={() => handleSend(inputValue)}
-      isLoading={isLoading}
-      showHint={true}
-      placeholder="Ask about this report or request changes..."
-    />
-  </div>
-</div>
+          {!pendingChange && (
+            <div className="report-floating-composer absolute bottom-6 left-0 right-0 z-10 flex justify-center pointer-events-none">
+              <div className="relative w-full max-w-2xl pointer-events-auto">
+                <ChatInput
+                  submitDisabled={cooldownSeconds > 0}
+                  notice={inputNotice}
+                  value={inputValue}
+                  onChange={setInputValue}
+                  onSubmit={() => handleSend(inputValue)}
+                  isLoading={isLoading}
+                  showHint={true}
+                  placeholder="Ask about this report or request changes..."
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

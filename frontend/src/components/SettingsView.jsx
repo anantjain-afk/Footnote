@@ -65,7 +65,7 @@ export default function SettingsView({ onBack, onKeyChange }) {
 
   return (
     <div className="entry-page settings-page">
-      <header className="dashboard-header settings-header"><span className="entry-brand">ResearchAI.</span><span className="entry-caption">Your workspace</span></header>
+      <header className="dashboard-header settings-header"><span className="entry-brand">Footnote.</span><span className="entry-caption">Your workspace</span></header>
       <div className="settings-content">
         <button type="button" className="settings-back" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" /> Back to research</button>
         <div className="settings-intro">

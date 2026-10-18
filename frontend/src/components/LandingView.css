@@ -38,7 +38,7 @@
 .lp-scene-content { max-width: 780px; position: relative; z-index: 1; }
 .lp-sample-line { display: flex; align-items: center; gap: 20px; max-width: 340px; color: #292929; font-size: 11px; font-weight: 600; letter-spacing: .19em; text-transform: uppercase; }
 .lp-sample-line i { display: block; flex: 1; height: 1px; background: #a9a6a0; }
-.lp-scene-heading { display: flex; align-items: baseline; gap: 16px; margin-top: 22px; min-height: 89px; animation: lp-evidence-in .45s cubic-bezier(.16,1,.3,1) both; }
+.lp-scene-heading { display: flex; align-items: baseline; gap: 16px; margin-top: 22px; min-height: 89px; }
 .lp-scene-heading > span { font: 400 clamp(65px, 5.7vw, 92px)/.95 var(--font-display); color: var(--lp-violet); letter-spacing: -.04em; }
 .lp-scene[data-stage="1"] .lp-scene-heading > span { color: #2871b6; }
 .lp-scene[data-stage="2"] .lp-scene-heading > span { color: #c7504d; }
@@ -94,8 +94,6 @@
 .lp-chapter-3 .lp-chapter-paper-art { right: -12%; top: -4%; width: min(95%, 850px); }
 .lp-chapter.is-visible .lp-chapter-paper-art { animation: lp-paper-unfold .95s cubic-bezier(.16,1,.3,1) both; }
 .lp-chapter.is-visible .lp-chapter-sheet { animation: lp-sheet-unfold .7s .12s cubic-bezier(.16,1,.3,1) both; }
-.lp-chapter-question { position: absolute; top: 17%; left: 6%; display: flex; align-items: center; gap: 14px; padding: 18px 22px; background: #fff; border: 1px solid #1b1a18; border-radius: 6px; box-shadow: 7px 12px 24px rgba(17,17,17,.12); font: 400 clamp(16px, 1.6vw, 23px)/1.2 var(--font-serif); transform: rotate(-4deg); z-index: 2; }
-.lp-chapter-question svg { color: var(--chapter-accent); flex: 0 0 auto; }
 .lp-chapter-sheet { position: relative; width: min(500px, 70%); min-height: 380px; margin: 80px 16% 0 0; padding: clamp(28px, 3.5vw, 52px); background: url('../assets/landing/blank-paper.png') center / 100% 100% no-repeat; filter: drop-shadow(12px 24px 26px rgba(36,34,32,.18)); transform: rotate(2deg); }
 .lp-sheet-label { color: var(--chapter-accent); font: 700 11px var(--font-sans); letter-spacing: .18em; text-transform: uppercase; }
 .lp-chapter-sheet h3 { margin: 14px 0 25px; font: 600 clamp(30px, 3vw, 45px)/1.07 var(--font-display); letter-spacing: -.03em; }
@@ -185,8 +183,6 @@
   .lp-chapter-progress { margin-top: 20px; }
   .lp-next-step { margin-top: 14px; }
   .lp-chapter-art { flex: 1; min-height: 430px; padding: 50px 5% 45px; }
-  .lp-chapter-question { top: 8%; left: 3%; padding: 11px 13px; font-size: 14px; }
-  .lp-chapter-question svg { width: 17px; }
   .lp-chapter-sheet { width: 75%; min-height: 320px; margin: 35px 14% 0 0; padding: 22px; }
   .lp-chapter-sheet h3 { font-size: 30px; margin-bottom: 16px; }
   .lp-sheet-entry { padding: 10px 0; }

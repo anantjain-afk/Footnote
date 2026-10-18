@@ -1,4 +1,5 @@
 import { Trash2, Loader2, PanelLeft, PanelLeftClose, SquarePen, Zap, Brain, Settings2 } from "lucide-react";
+import './ReportWorkspace.css';
 
 // Removed StatusBadge component per user request
 
@@ -52,7 +53,7 @@ export function Sidebar({
     <>
       {/* Floating buttons when sidebar is closed */}
       <div 
-        className={`fixed top-3 left-3 z-50 flex flex-col gap-3 transition-all duration-300 ${
+        className={`research-sidebar-controls fixed top-3 left-3 z-50 flex flex-col gap-3 transition-all duration-300 ${
           isOpen ? 'opacity-0 pointer-events-none -translate-x-4' : 'opacity-100 pointer-events-auto translate-x-0'
         }`}
       >
@@ -72,8 +73,18 @@ export function Sidebar({
         </button>
       </div>
 
-      <aside 
-        className={`h-screen bg-[#f9f9f9] border-r border-black/5 flex flex-col flex-shrink-0 z-40 relative text-black font-sans transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      {isOpen && (
+        <button
+          type="button"
+          aria-label="Close sidebar overlay"
+          onClick={onToggle}
+          className="research-sidebar-backdrop fixed inset-0 z-30 bg-black/25 md:hidden"
+        />
+      )}
+
+      <aside
+        inert={!isOpen}
+        className={`research-sidebar h-screen bg-[#f9f9f9] border-r border-black/5 flex flex-col flex-shrink-0 z-40 relative text-black font-sans transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isOpen ? 'w-68 translate-x-0 opacity-100' : 'w-0 -translate-x-full opacity-0 overflow-hidden border-r-0'
         }`}
       >

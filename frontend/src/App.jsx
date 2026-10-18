@@ -238,7 +238,7 @@ function AuthenticatedApp() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[#f9f9f9] text-black font-sans antialiased overflow-hidden selection:bg-black/10 selection:text-black">
+    <div className="workspace-shell flex h-screen max-md:h-dvh w-full bg-[#f9f9f9] text-black font-sans antialiased overflow-hidden selection:bg-black/10 selection:text-black">
       <Sidebar
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}

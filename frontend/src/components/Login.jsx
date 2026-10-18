@@ -84,7 +84,7 @@ export default function Login({ initialMode = 'signin' }) {
   return (
     <div className="entry-page auth-page">
       <header className="entry-header">
-        <a className="entry-brand" href="/">ResearchAI.</a>
+        <a className="entry-brand" href="/">Footnote.</a>
         <a className="entry-text-link" href="/"><ArrowLeft size={16} aria-hidden="true" />Back to home</a>
       </header>
       <main className="auth-content">
@@ -113,10 +113,10 @@ export default function Login({ initialMode = 'signin' }) {
             </svg>
             {loading === 'google' ? 'Opening Google…' : 'Continue with Google'}
           </button>
-          <p className="auth-switch">{signup ? 'Already have an account?' : 'New to ResearchAI?'} <button type="button" onClick={changeMode} disabled={Boolean(loading)} className="entry-text-link">{signup ? 'Sign in' : 'Create an account'}</button></p>
+          <p className="auth-switch">{signup ? 'Already have an account?' : 'New to Footnote?'} <button type="button" onClick={changeMode} disabled={Boolean(loading)} className="entry-text-link">{signup ? 'Sign in' : 'Create an account'}</button></p>
         </div>
       </main>
-      <footer className="entry-footer"><span>Research that stays with you.</span><span>ResearchAI.</span></footer>
+      <footer className="entry-footer"><span>Research that stays with you.</span><span>Footnote.</span></footer>
     </div>
   );
 }

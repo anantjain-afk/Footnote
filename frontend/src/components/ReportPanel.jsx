@@ -90,7 +90,7 @@ export function ReportPanel({
   return (
     <div 
       ref={panelRef}
-      className={`h-full flex flex-col overflow-y-auto relative bg-white transition-all duration-300 text-black ${
+      className={`report-panel h-full flex flex-col ${pendingChange ? 'overflow-hidden' : 'overflow-y-auto'} relative bg-white transition-all duration-300 text-black ${
         isChatOpen ? 'w-full' : 'w-full px-4 md:px-12 lg:px-32 py-6 '
       }`}
     >
@@ -102,7 +102,7 @@ export function ReportPanel({
 
       {/* Sticky top navigation bar */}
       <div 
-        className={`sticky top-0 z-20 flex flex-wrap items-center justify-between gap-y-3 py-4 border-b border-black/10 bg-white/90 backdrop-blur-md px-6 ${
+        className={`report-panel-toolbar sticky top-0 z-20 flex flex-wrap items-center justify-between gap-y-3 py-4 border-b border-black/10 bg-white/90 backdrop-blur-md px-6 ${pendingChange ? 'shrink-0' : ''} ${
           isChatOpen ? (isSidebarOpen ? '' : 'pl-16') : '-mx-6'
         } mb-6`}
       >
@@ -158,36 +158,15 @@ export function ReportPanel({
       {/* Report Markdown Area */}
       <div 
         key={report} 
-        className={`flex-1 relative animate-[fade-in_0.5s_cubic-bezier(0.16,1,0.3,1)_forwards] ${
+        className={`flex-1 relative ${pendingChange ? 'min-h-0 overflow-y-auto' : 'animate-[fade-in_0.5s_cubic-bezier(0.16,1,0.3,1)_forwards]'} ${
           isChatOpen ? 'px-6 md:px-8 pb-12' : ''
         }`}
       >
         {pendingChange ? (
-          <>
-            <ReportVersionDiff
-              previousContent={pendingChange.previousContent}
-              proposedContent={pendingChange.proposedContent}
-            />
-            <div className="mt-5 flex flex-wrap items-center justify-end gap-3 border-t border-black/10 pt-4">
-              <button
-                type="button"
-                onClick={onRejectChanges}
-                disabled={historyBusy}
-                className="border border-black/25 px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:border-black hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50"
-              >
-                Reject changes
-              </button>
-              <button
-                type="button"
-                onClick={onApproveChanges}
-                disabled={historyBusy}
-                className="bg-black px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50"
-              >
-                {historyBusy ? 'Saving…' : 'Approve changes'}
-              </button>
-            </div>
-            {historyError && <p className="mt-3 text-right text-xs text-red-800" role="alert">{historyError}</p>}
-          </>
+          <ReportVersionDiff
+            previousContent={pendingChange.previousContent}
+            proposedContent={pendingChange.proposedContent}
+          />
         ) : (
           <>
             {selectedVersion && (
@@ -200,6 +179,30 @@ export function ReportPanel({
           </>
         )}
       </div>
+
+      {pendingChange && (
+        <div className={`report-review-actions shrink-0 relative z-20 border-t border-black/10 bg-white py-4 ${isChatOpen ? 'px-6 md:px-8' : ''}`}>
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={onRejectChanges}
+              disabled={historyBusy}
+              className="border border-black/25 px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:border-black hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50"
+            >
+              Reject changes
+            </button>
+            <button
+              type="button"
+              onClick={onApproveChanges}
+              disabled={historyBusy}
+              className="bg-black px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50"
+            >
+              {historyBusy ? 'Saving…' : 'Approve changes'}
+            </button>
+          </div>
+          {historyError && <p className="mt-3 text-right text-xs text-red-800" role="alert">{historyError}</p>}
+        </div>
+      )}
 
       {/* Updating Loading Overlay */}
       {isUpdatingReport && (

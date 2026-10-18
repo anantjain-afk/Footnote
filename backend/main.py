@@ -8,6 +8,7 @@ from .api.chat import router as chat_router
 from .api.user_settings import router as user_settings_router
 from contextlib import asynccontextmanager
 from .core.rate_limit import create_rate_limiter, RateLimitError, rate_limit_error_handler
+from .core.config import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,10 +27,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.add_exception_handler(RateLimitError, rate_limit_error_handler)
 
-# Enable CORS for frontend development
+# Allow the configured frontend origins in development and deployment.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

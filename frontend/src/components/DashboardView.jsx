@@ -22,7 +22,7 @@ export default function DashboardView({ onSubmit, onSelectSession, onOpenSetting
 
   return (
     <div className="entry-page dashboard-page">
-      <header className="dashboard-header"><span className="entry-brand ">ResearchAI.</span><span className="entry-caption">Your workspace</span></header>
+      <header className="dashboard-header"><span className="entry-brand ">Footnote.</span><span className="entry-caption">Your workspace</span></header>
       <div className="dashboard-content">
         <section aria-labelledby="dashboard-title">
           <h1 id="dashboard-title">Your research, continued.</h1>

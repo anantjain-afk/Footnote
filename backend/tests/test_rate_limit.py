@@ -141,6 +141,10 @@ class RouteTests(RedisTests):
         self.patches = []
         self.db = SimpleNamespace(execute=AsyncMock(), fetch=AsyncMock(return_value=[]),
                                   fetchrow=AsyncMock(side_effect=self.fetchrow))
+        @asynccontextmanager
+        async def transaction():
+            yield
+        self.db.transaction = transaction
         self.status = 'completed'
         self.report_exists = True
         async def database():
@@ -154,6 +158,7 @@ class RouteTests(RedisTests):
         app.state.rate_limiter = self.limiter
         self.normal = self.mock('backend.api.sessions.run_research_pipeline', AsyncMock())
         self.deep = self.mock('backend.api.sessions.run_deep_research_pipeline', AsyncMock())
+        self.mock('backend.api.sessions.resolve_firecrawl_key', AsyncMock(return_value='test-key'))
         self.legacy = self.mock('backend.api.report.graph.ainvoke', AsyncMock(return_value={'report': 'ok'}))
         result = {'intent': 'ANSWER', 'response': 'ok', 'updated_report': ''}
         async def events(*args, **kwargs):

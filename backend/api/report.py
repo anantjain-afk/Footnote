@@ -3,7 +3,9 @@ from fastapi import Request, APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from ..graph.research.builder import graph
 import uuid
+from pathlib import Path
 from fastapi.responses import FileResponse
+from starlette.background import BackgroundTask
 from ..services.pdf.renderer import generate_pdf
 
 logger = logging.getLogger(__name__)
@@ -34,7 +36,7 @@ class ExportRequest(BaseModel):
 
 @router.post("/report/export")
 async def export_pdf(body: ExportRequest, user: User = Depends(get_current_user)):
-    # use /tmp so you don't accumulate PDFs on disk
+    # Keep the temporary file until delivery completes, then remove it.
     filename = f"report_{uuid.uuid4().hex[:8]}.pdf"
     output_path = f"/tmp/{filename}"
 
@@ -46,6 +48,7 @@ async def export_pdf(body: ExportRequest, user: User = Depends(get_current_user)
             sources=body.sources
         )
     except Exception as e:
+        Path(output_path).unlink(missing_ok=True)
         logger.error("PDF generation failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
 
@@ -53,5 +56,5 @@ async def export_pdf(body: ExportRequest, user: User = Depends(get_current_user)
         path=output_path,
         media_type="application/pdf",
         filename=f"research-{body.topic[:30].replace(' ', '-')}.pdf",
-        background=None     # keep file alive until response is sent
+        background=BackgroundTask(Path(output_path).unlink, missing_ok=True)
     )

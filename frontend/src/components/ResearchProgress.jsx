@@ -6,7 +6,7 @@ export function PipelineLayout({ title, topic, mode, activity, children }) {
   return (
     <div className="entry-page pipeline-page">
       <header className="dashboard-header">
-        <span className="entry-brand">ResearchAI.</span>
+        <span className="entry-brand">Footnote.</span>
         <span className="entry-caption">{mode}</span>
       </header>
       <div className="pipeline-content">

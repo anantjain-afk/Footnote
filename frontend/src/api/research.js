@@ -1,7 +1,8 @@
 import { fetchWithAuth } from './authFetch';
+const BASE = `${import.meta.env.VITE_BACKEND_URL || "http://localhost:8000"}/api`;
 
 export async function exportReportPDF(topic, report, sources = []) {
-  const response = await fetchWithAuth("http://localhost:8000/api/report/export", {
+  const response = await fetchWithAuth(`${BASE}/report/export`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ topic, report, sources }),

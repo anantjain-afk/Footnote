@@ -4,6 +4,7 @@ import ChatInput from './ChatInput'
 import { X, Sparkles } from 'lucide-react'
 
 export function ChatPanel({
+  hasPendingChanges = false,
   notice,
   submitDisabled,
   messages,
@@ -25,7 +26,7 @@ export function ChatPanel({
   return (
     <div className="h-full flex flex-col bg-white border-l border-black/10 relative">
       {/* Sticky header */}
-      <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-white/90 backdrop-blur-md border-b border-black/5">
+      <div className="report-chat-header sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-white/90 backdrop-blur-md border-b border-black/5">
         <div className="flex items-center space-x-2">
           <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-black/5 text-black">
             <Sparkles className="w-4 h-4 animate-pulse-slow" />
@@ -70,7 +71,18 @@ export function ChatPanel({
       </div>
 
       {/* Input area fixed to the bottom */}
-      <div className="p-4 border-t border-black/5 bg-white pb-6">
+      {hasPendingChanges && (
+        <div className="report-mobile-review p-4 border-t border-black/5 bg-white md:hidden">
+          <button
+            type="button"
+            onClick={onCloseChat}
+            className="min-h-11 w-full bg-black px-4 py-3 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+          >
+            Review changes
+          </button>
+        </div>
+      )}
+      <div className={`report-chat-composer p-4 border-t border-black/5 bg-white pb-6 ${hasPendingChanges ? 'max-md:hidden' : ''}`}>
         <ChatInput
           notice={notice}
           submitDisabled={submitDisabled}

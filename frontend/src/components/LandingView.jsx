@@ -112,7 +112,7 @@ export default function LandingView() {
       <div className="lp-scroll-story" ref={storyRef}>
         <div className="lp-sticky" data-chapter="0">
           <header className="lp-header">
-            <a className="lp-brand" href="/" aria-label="ResearchAI home">ResearchAI<span>.</span></a>
+            <a className="lp-brand" href="/" aria-label="Footnote home">Footnote<span>.</span></a>
             <a className="lp-signin" href="?auth=signin">Sign in <ArrowRight size={17} aria-hidden="true" /></a>
           </header>
 
@@ -133,7 +133,7 @@ export default function LandingView() {
               <img className="lp-hero-paper" src={evidencePaper} alt="" />
               <div className="lp-scene-content" role="tabpanel" aria-label={mode === 'normal' ? 'Normal research' : 'Deep research'}>
                 <div className="lp-sample-line"><span>Illustrative example</span><i /></div>
-                <div className="lp-scene-heading" key={mode} aria-live="polite" aria-atomic="true"><span>01</span><h2>{current.title}</h2></div>
+                <div className="lp-scene-heading" aria-live="polite" aria-atomic="true"><span>01</span><h2>{current.title}</h2></div>
                 <div className="lp-question"><Search size={26} aria-hidden="true" /><span>How can cities stay cooler?</span><span className="lp-question-arrow" aria-hidden="true"><ArrowRight size={24} /></span></div>
                 <div className="lp-evidence" key={mode}>
                   <p className="lp-stage-summary">{current.summary}</p>
@@ -166,7 +166,6 @@ export default function LandingView() {
             </div>
             <div className="lp-chapter-art">
               <img src={PAPER_ART[index]} alt="" className="lp-chapter-paper-art" />
-              <div className="lp-chapter-question"><Search size={22} aria-hidden="true" />How can cities stay cooler?</div>
               <div className="lp-chapter-sheet">
                 <span className="lp-sheet-label">{index === 2 ? 'Report in progress' : index === 3 ? 'Research review' : 'Evidence board'}</span>
                 <h3>{step.title}</h3>
@@ -195,7 +194,7 @@ export default function LandingView() {
         <div className="lp-chat-sample" aria-label="Illustrative follow-up conversation"><span>Illustrative follow-up</span><p>How would this change for a smaller city?</p><div>Explore that question with the sources and report already in view. <ArrowRight size={20} aria-hidden="true" /></div></div>
       </section>
 
-      <footer className="lp-footer"><a className="lp-brand" href="/">ResearchAI<span>.</span></a><span>A question is a good place to start.</span><a href="?auth=signin">Sign in</a></footer>
+      <footer className="lp-footer"><a className="lp-brand" href="/">Footnote<span>.</span></a><span>A question is a good place to start.</span><a href="?auth=signin">Sign in</a></footer>
     </div>
   )
 }
