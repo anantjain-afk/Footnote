@@ -1,11 +1,17 @@
-export async function exportReportPDF(topic, report) {
-  const response = await fetch("http://localhost:8000/api/report/export", {
+import { fetchWithAuth } from './authFetch';
+const BASE = `${import.meta.env.VITE_BACKEND_URL || "http://localhost:8000"}/api`;
+
+export async function exportReportPDF(topic, report, sources = []) {
+  const response = await fetchWithAuth(`${BASE}/report/export`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ topic, report }),
+    body: JSON.stringify({ topic, report, sources }),
   });
 
-  if (!response.ok) throw new Error("PDF export failed");
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    throw new Error(`PDF export failed (${response.status}): ${errorText || response.statusText}`);
+  }
 
   // stream the binary response into a blob and trigger download
   const blob = await response.blob();

@@ -1,6 +1,4 @@
-
 from tavily import TavilyClient
-from dotenv import load_dotenv 
-import os
+from ..core.config import settings
 
-tavilyClient = TavilyClient(api_key= os.getenv("TAVILY_API_KEY"))
+tavilyClient = TavilyClient(api_key=settings.tavily_api_key)

@@ -1,8 +1,9 @@
 # ── LangGraph / LangChain core ────────────────────────────────────────────────
-langgraph>=0.2.0
-langchain>=0.3.0
-langchain-core>=0.3.0
-langchain-groq>=0.2.0          # Groq LLM integration
+# Keep the existing graph APIs compatible with the Postgres saver below.
+langgraph>=0.2.28,<0.3.0
+langchain>=0.3.0,<0.4.0
+langchain-core>=0.3.0,<0.4.0
+langchain-groq>=0.2.0,<0.4.0   # Groq LLM integration
 
 # ── LLM providers ─────────────────────────────────────────────────────────────
 groq>=0.11.0                   # Groq Python SDK
@@ -13,6 +14,7 @@ firecrawl-py>=1.4.0            # Firecrawl content extraction
 
 # ── PDF generation ────────────────────────────────────────────────────────────
 playwright>=1.47.0             # Headless browser PDF rendering
+markdown>=3.6.0                # Markdown conversion to HTML
 
 # ── Web backend (FastAPI) ──────────────────────────────────────────────────────
 fastapi>=0.115.0
@@ -39,3 +41,13 @@ rich>=13.8.0                   # Pretty terminal output / logging
 
 # observability
 langsmith>=0.1.0                   # Observability for LangGraph / LangChain
+
+# ── Supabase & Auth ───────────────────────────────────────────────────────────
+asyncpg>=0.30.0
+redis==5.2.1                 # Async shared rolling rate limits; preserves PyJWT pin
+# 1.0.3 expects JSON from dumps_typed(), but checkpoint 1.0.12 emits MessagePack.
+langgraph-checkpoint==1.0.12
+langgraph-checkpoint-postgres==1.0.9
+psycopg[binary]>=3.1.19,<4.0.0
+PyJWT==2.8.0
+cryptography==42.0.5

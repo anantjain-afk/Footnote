@@ -1,0 +1,102 @@
+/* Keep the existing desktop split layout; mobile panels occupy their own layer. */
+@media (max-width: 767px) {
+  .research-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    height: 100dvh;
+  }
+
+  .research-sidebar button[title],
+  .research-sidebar-controls button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .workspace-shell:has(.report-chat-layout) .research-sidebar,
+  .workspace-shell:has(.report-chat-layout) .research-sidebar-controls,
+  .workspace-shell:has(.report-chat-layout) .research-sidebar-backdrop {
+    visibility: hidden;
+  }
+
+  .report-chat-layout {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    height: 100dvh;
+    background: white;
+  }
+
+  .report-chat-report {
+    display: none;
+  }
+
+  .report-chat-panel {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .report-chat-header,
+  .report-chat-composer,
+  .report-mobile-review {
+    flex-shrink: 0;
+  }
+
+  .report-chat-panel button[title="Close Chat"] {
+    width: 44px;
+    height: 44px;
+  }
+
+  .report-chat-composer,
+  .report-mobile-review,
+  .report-review-actions {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .report-chat-composer textarea,
+  .report-floating-composer textarea {
+    min-width: 0;
+  }
+
+  .report-floating-composer {
+    padding-inline: 1rem;
+  }
+
+  .report-panel-toolbar {
+    flex-shrink: 0;
+    margin-inline: -1rem;
+    padding-left: 4rem;
+    padding-right: 1rem;
+    min-height: 7rem;
+  }
+
+  .report-panel-toolbar > div {
+    max-width: 100%;
+  }
+
+  .report-panel .markdown-body {
+    font-size: 1.0625rem;
+    overflow-wrap: anywhere;
+  }
+
+  .report-panel .markdown-body h1 {
+    font-size: 2.5rem;
+  }
+
+  .report-panel .markdown-body h2 {
+    font-size: 2rem;
+  }
+
+  .report-panel .markdown-body h3 {
+    font-size: 1.5rem;
+  }
+
+  .report-review-actions > div {
+    gap: 0.5rem;
+  }
+
+  .report-review-actions button {
+    flex: 1;
+    min-height: 44px;
+    padding-inline: 0.5rem;
+  }
+}

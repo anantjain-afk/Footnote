@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: footnote-api
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: feature/landing-page-redesign
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    numInstances: 1
+    autoDeploy: false
+    envVars:
+      - key: DEBUG
+        value: "false"
+      - key: LANGCHAIN_TRACING_V2
+        value: "false"
+      - key: CORS_ORIGINS
+        value: '["http://localhost:5173"]'
+      - key: RATE_LIMIT_KEY_PREFIX
+        value: research-agent:production
+      - key: RATE_LIMIT_REPORTS
+        value: "10"
+      - key: RATE_LIMIT_CHAT
+        value: "30"
+      - key: RATE_LIMIT_WINDOW_SECONDS
+        value: "3600"
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: FIRECRAWL_API_KEY
+        sync: false
+      - key: FIRECRAWL_KEY_ENCRYPTION_KEY
+        sync: false

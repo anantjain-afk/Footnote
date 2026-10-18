@@ -1,11 +1,5 @@
-import os
-from dotenv import load_dotenv
-load_dotenv()
 from firecrawl import AsyncFirecrawl
 
-firecrawl = AsyncFirecrawl(
-  api_key= os.getenv("FIRECRAWL_API_KEY")
-)
-
-
-
+def client_for_key(api_key: str) -> AsyncFirecrawl:
+    """Create a client scoped to one research run, never a global user key."""
+    return AsyncFirecrawl(api_key=api_key)

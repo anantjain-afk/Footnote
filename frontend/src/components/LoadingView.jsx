@@ -1,152 +1,30 @@
-import React, { useState, useEffect } from 'react'
+import { Search, FileText, PenLine, ShieldCheck } from 'lucide-react'
+import { PipelineLayout, PipelineSteps, QualityScores } from './ResearchProgress'
 
-export default function LoadingView({ topic }) {
+const NODES = ['search', 'extract_contents', 'generate', 'judge']
+
+export default function LoadingView({ topic, currentNode, scores, events = [], iterations = 0 }) {
+  const activeIndex = currentNode === 'route' ? 3 : NODES.indexOf(currentNode)
+  const lastResult = node => events.findLast(event => event.type === 'end' && event.node === node)?.details
+  const search = lastResult('search')
+  const extraction = lastResult('extract_contents')
   const steps = [
-    {
-      id: 1,
-      title: "Searching the web",
-      description: "Gathering source articles and reference data using Tavily Search API",
-      provider: "Tavily"
-    },
-    {
-      id: 2,
-      title: "Extracting content",
-      description: "Scraping page contents, filtering fluff, and cleaning raw texts via Firecrawl",
-      provider: "Firecrawl"
-    },
-    {
-      id: 3,
-      title: "Generating report",
-      description: "Synthesizing arguments, drafting detailed markdown sections using Groq LLM",
-      provider: "Groq LLM"
-    },
-    {
-      id: 4,
-      title: "Reviewing quality",
-      description: "Verifying formatting, fact-checking, and refining report criteria using Judge LLM",
-      provider: "Judge LLM"
-    }
+    { id: 'search', color: 'blue', icon: Search, title: 'Search the web', description: search?.urls ? `${search.urls.length} sources found for your question.` : 'Finding relevant sources and different perspectives.' },
+    { id: 'extract_contents', color: 'red', icon: FileText, title: 'Read the sources', description: extraction?.extracted_count != null ? `${extraction.extracted_count} pages read and prepared for research.` : 'Reading the source material and gathering useful evidence.' },
+    { id: 'generate', color: 'yellow', icon: PenLine, title: 'Write the report', description: iterations > 0 ? `Refining the report after quality review · Revision ${iterations}.` : 'Bringing the findings together into a report with citations.' },
+    { id: 'judge', color: 'green', icon: ShieldCheck, title: 'Review & refine', description: 'Checking relevance, depth, clarity, language, and formatting.' },
   ]
 
-  const [activeStepIndex, setActiveStepIndex] = useState(0)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveStepIndex((prevIndex) => {
-        if (prevIndex < steps.length - 1) {
-          return prevIndex + 1
-        }
-        return prevIndex // Stay at last step until backend response updates view
-      })
-    }, 4500) // 4.5 seconds per step
-
-    return () => clearInterval(interval)
-  }, [steps.length])
-
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 relative bg-[#030303]">
-      {/* Background ambient glows */}
-      <div className="absolute top-1/3 left-1/3 w-[400px] h-[400px] bg-purple-900/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/3 right-1/3 w-[450px] h-[450px] bg-blue-900/10 rounded-full blur-[110px] pointer-events-none" />
-
-      <div className="w-full max-w-xl z-10 space-y-10 animate-fade-in">
-        {/* Header / Subtitle */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center space-x-2">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
-            </span>
-            <span className="text-xs font-semibold text-purple-400 tracking-wider uppercase">
-              Research Pipeline Active
-            </span>
-          </div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white">
-            Investigating Topic
-          </h2>
-          <div className="inline-block px-5 py-2.5 rounded-xl border border-zinc-800 bg-[#0c0c0e]/80 text-zinc-300 font-mono text-sm max-w-full truncate shadow-inner">
-            "{topic}"
-          </div>
-        </div>
-
-        {/* Vertical Stepper Container */}
-        <div className="relative glass-panel rounded-2xl p-6 md:p-8 space-y-8 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-          {/* Vertical Connecting Line */}
-          <div className="absolute left-[37px] top-[40px] bottom-[40px] w-0.5 bg-zinc-800 pointer-events-none">
-            {/* Colored Active Line Overlay */}
-            <div
-              className="w-full bg-gradient-to-b from-purple-500 via-blue-500 to-emerald-500 transition-all duration-1000 ease-out"
-              style={{
-                height: `${(activeStepIndex / (steps.length - 1)) * 100}%`,
-              }}
-            />
-          </div>
-
-          {/* Stepper Items */}
-          {steps.map((step, idx) => {
-            const isCompleted = idx < activeStepIndex
-            const isActive = idx === activeStepIndex
-            const isPending = idx > activeStepIndex
-
-            return (
-              <div
-                key={step.id}
-                className={`flex items-start space-x-6 transition-all duration-500 ${
-                  isActive ? 'opacity-100 scale-[1.01]' : isPending ? 'opacity-35' : 'opacity-85'
-                }`}
-              >
-                {/* Step Indicator Dot / Icon */}
-                <div className="relative z-10 flex items-center justify-center">
-                  {isCompleted ? (
-                    <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all duration-300">
-                      <svg className="w-4 h-4 text-zinc-950 font-bold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  ) : isActive ? (
-                    <div className="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.5)] animate-pulse-slow">
-                      <svg className="animate-spin h-4.5 w-4.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    </div>
-                  ) : (
-                    <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 text-xs font-semibold">
-                      {idx + 1}
-                    </div>
-                  )}
-                </div>
-
-                {/* Step Metadata & Labels */}
-                <div className="flex-1 space-y-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h3 className={`font-semibold text-base ${isActive ? 'text-purple-400' : 'text-zinc-200'}`}>
-                      {step.title}
-                    </h3>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono tracking-wider font-semibold border ${
-                      isActive 
-                        ? 'bg-purple-950/40 text-purple-300 border-purple-800/40' 
-                        : isCompleted
-                        ? 'bg-emerald-950/20 text-emerald-300 border-emerald-900/30'
-                        : 'bg-zinc-900/80 text-zinc-500 border-zinc-800'
-                    }`}>
-                      {step.provider}
-                    </span>
-                  </div>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
-                    {step.description}
-                  </p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Global Loading Status Text */}
-        <p className="text-center font-mono text-xs text-zinc-500 animate-pulse">
-          Retrieving web intelligence and synthesizing report. Please stand by...
-        </p>
+    <PipelineLayout title="A clearer picture is taking shape." topic={topic} mode="Research" activity={activeIndex < 0 ? 'Preparing your research…' : `Step ${activeIndex + 1} of 4 · ${steps[activeIndex].title}`}>
+      <div className="pipeline-body">
+        <PipelineSteps steps={steps} activeIndex={activeIndex} />
+        <aside className="pipeline-aside">
+          <section className="pipeline-section"><h2>Room for a better answer.</h2><p>Your report is reviewed before it’s ready. If it needs another pass, you’ll see the writing and review steps run again.</p></section>
+          <QualityScores scores={scores?.judge} />
+          <p className="pipeline-footnote">Your report and sources will open here when the research is complete.</p>
+        </aside>
       </div>
-    </div>
+    </PipelineLayout>
   )
 }

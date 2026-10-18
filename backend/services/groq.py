@@ -1,11 +1,9 @@
 from langchain_groq import ChatGroq
-import os 
-from dotenv import load_dotenv , find_dotenv
-
-load_dotenv(find_dotenv())
+from ..core.config import settings
 
 llm = ChatGroq(
-    api_key=os.getenv("GROQ_API_KEY"),
-    model="llama-3.1-8b-instant",
-    temperature=0.1,
-)   
+    api_key=settings.groq_api_key,
+    model=settings.groq_model,
+    temperature=settings.groq_temperature,
+    streaming=True,
+)

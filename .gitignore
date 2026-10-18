@@ -1,0 +1,78 @@
+# AI / Editor Directories
+.agents/
+.agent/
+.claude/
+.calude/
+.codex/
+.cursor/
+.gemini/
+.openrouter/
+kiro/
+.kiro/
+opencode/
+.opencode/
+
+# Local credentials, runtimes, and database backups
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+.venv/
+**/node_modules/
+**/__pycache__/
+backups/
+deployment-artifacts/
+
+# Local notes and design-tool artifacts
+*.md
+*.mds
+*.markdown
+.impeccable/
+.dev_cache/
+skills-lock.json
+frontend/src/assets/landing/*.prompt.txt
+
+# Operating system and editor files
+.DS_Store
+._*
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.aws/
+
+# Python, test, and build caches
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage/
+htmlcov/
+playwright-report/
+test-results/
+dist/
+dist-ssr/
+build/
+*.egg-info/
+
+# Local databases, logs, and temporary output
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.log
+*.tmp
+*.temp
+
+# Unused starter artwork and generated graph visualization
+frontend/src/assets/react.svg
+frontend/src/assets/vite.svg
+frontend/src/assets/hero.png
+backend/graph/research/graph.png

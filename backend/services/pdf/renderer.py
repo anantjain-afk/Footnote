@@ -1,7 +1,48 @@
 import asyncio
 import markdown
+import re
 from datetime import datetime
 from playwright.async_api import async_playwright
+
+def process_citations(report_md: str, sources: list[dict]) -> str:
+    if not sources:
+        return report_md
+    
+    # Remove AI-generated references section if it exists
+    report_md = re.sub(r'(?i)#+\s*References.*', '', report_md, flags=re.DOTALL).strip()
+
+    source_map = {}
+    for s in sources:
+        sid = s.get('id') or s.get('source_number')
+        if sid is not None:
+            source_map[str(sid)] = s
+
+    # Replace [1] or [1,2] with internal anchors
+    def replacer(match):
+        inner = match.group(1)
+        ids = [i.strip() for i in inner.split(',')]
+        links = []
+        for i in ids:
+            if i in source_map:
+                links.append(f'<a href="#ref-{i}" style="color: #6b21a8; text-decoration: none; font-family: monospace; font-weight: bold;">[{i}]</a>')
+            else:
+                links.append(f'[{i}]')
+        return '<sup>' + ', '.join(links) + '</sup>'
+
+    report_md = re.sub(r'\[(\d+(?:\s*,\s*\d+)*)\]', replacer, report_md)
+
+    # Append our custom references section using HTML so we can assign IDs
+    report_md += "\n\n## References\n\n"
+    for s in sources:
+        sid = s.get('id') or s.get('source_number')
+        title = s.get('title') or s.get('url')
+        url = s.get('url', '#')
+        report_md += f'<div id="ref-{sid}" style="margin-bottom: 8px; font-size: 13px; line-height: 1.4;">'
+        report_md += f'<span style="color: #64748b; font-family: monospace; margin-right: 4px;">[{sid}]</span>'
+        report_md += f'<a href="{url}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: underline; text-underline-offset: 2px;">{title}</a>'
+        report_md += f'</div>\n'
+
+    return report_md
 
 def markdown_to_html(topic: str, report_md: str) -> str:
     """Convert markdown report to a styled HTML string."""
@@ -148,8 +189,11 @@ def markdown_to_html(topic: str, report_md: str) -> str:
     </html>
     """
 
-async def generate_pdf(topic: str, report_md: str, output_path: str) -> str:
+async def generate_pdf(topic: str, report_md: str, output_path: str, sources: list[dict] = None) -> str:
     """Render HTML to PDF using Playwright. Returns the output path."""
+    if sources is None:
+        sources = []
+    report_md = process_citations(report_md, sources)
     html_content = markdown_to_html(topic, report_md)
 
     async with async_playwright() as p:
