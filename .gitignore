@@ -29,6 +29,7 @@ deployment-artifacts/
 *.md
 *.mds
 *.markdown
+!/README.md
 .impeccable/
 .dev_cache/
 skills-lock.json
